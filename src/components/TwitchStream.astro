@@ -1,0 +1,96 @@
+---
+const channel = import.meta.env.TWITCH_CHANNEL;
+---
+
+<section class="twitch-stream" aria-label="Twitch stream" data-twitch-stream>
+  <h2>Live from the studio</h2>
+  <p role="status" data-status>Checking Twitch live status...</p>
+  <iframe
+    title="Kelly AOD Art live on Twitch"
+    width="640"
+    height="360"
+    allowfullscreen
+    hidden
+  ></iframe>
+  <p>
+    <a
+      data-channel-link
+      href={channel ? `https://www.twitch.tv/${encodeURIComponent(channel)}` : undefined}
+      hidden={!channel}
+    >Watch or follow on Twitch</a>
+  </p>
+  <noscript>Enable JavaScript to check whether the stream is live.</noscript>
+</section>
+
+<script>
+  import type { TwitchStatus } from "../lib/twitch";
+
+  for (const section of document.querySelectorAll<HTMLElement>("[data-twitch-stream]")) {
+    const status = section.querySelector<HTMLElement>("[data-status]")!;
+    const player = section.querySelector("iframe")!;
+    const link = section.querySelector<HTMLAnchorElement>("[data-channel-link]")!;
+
+    async function checkStatus() {
+      try {
+        const response = await fetch("/api/twitch-live", {
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (!response.ok) throw new Error(`Twitch status request failed (${response.status}).`);
+        const data: TwitchStatus = await response.json();
+        link.href = `https://www.twitch.tv/${encodeURIComponent(data.channel)}`;
+        link.hidden = false;
+        status.textContent = data.live ? `Live now: ${data.title}` : "The studio stream is offline.";
+
+        if (data.live) {
+          if (!player.hasAttribute("src")) {
+            const url = new URL("https://player.twitch.tv/");
+            url.search = new URLSearchParams({
+              channel: data.channel,
+              parent: window.location.hostname,
+              autoplay: "false",
+              muted: "true",
+            }).toString();
+            player.src = url.href;
+          }
+          player.hidden = false;
+        } else {
+          player.hidden = true;
+          player.removeAttribute("src");
+        }
+      } catch (error) {
+        console.error("[twitch-stream]", error);
+        status.textContent = "Unable to check live status. Please try Twitch directly.";
+        player.hidden = true;
+        player.removeAttribute("src");
+      }
+    }
+
+    async function poll() {
+      await checkStatus();
+      window.setTimeout(poll, 60_000);
+    }
+    void poll();
+  }
+</script>
+
+<style>
+  .twitch-stream {
+    padding-block: 2rem;
+  }
+
+  iframe {
+    width: 100%;
+    max-width: 60rem;
+    height: auto;
+    min-height: 300px;
+    aspect-ratio: 16 / 9;
+    border: 0;
+  }
+
+  /* Twitch requires at least 400px of player width; smaller screens use the link. */
+  @media (max-width: 28rem) {
+    iframe {
+      display: none;
+    }
+  }
+</style>

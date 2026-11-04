@@ -1,4 +1,3 @@
-/data/square-catalog-snapshot.json
 .env
 /dist/
 /.astro/
@@ -6,3 +5,4 @@
 .env.*
 !.env.example
 .DS_Store
+.vercel

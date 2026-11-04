@@ -1,6 +1,3 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-
 type Money = { amount: number; currency: string };
 type VariationObject = {
   id: string;
@@ -45,7 +42,7 @@ type InventoryCount = {
   state: string;
   quantity: string;
 };
-export type SquareSnapshot = {
+export type SquareCatalog = {
   catalog: CatalogObject[];
   inventory: InventoryCount[];
 };
@@ -70,11 +67,9 @@ export type Product = {
   inStock: boolean;
 };
 
-const snapshotPath = resolve("data/square-catalog-snapshot.json");
-
-export function normalizeProducts(snapshot: SquareSnapshot): Product[] {
+export function normalizeProducts(snapshot: SquareCatalog): Product[] {
   if (!Array.isArray(snapshot.catalog) || !Array.isArray(snapshot.inventory)) {
-    throw new Error("Square snapshot must include catalog and inventory arrays.");
+    throw new Error("Square data must include catalog and inventory arrays.");
   }
 
   const catalogById = new Map(snapshot.catalog.map((object) => [object.id, object]));
@@ -188,20 +183,4 @@ export function normalizeProducts(snapshot: SquareSnapshot): Product[] {
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-export async function loadProducts(): Promise<Product[]> {
-  let contents: string;
-  try {
-    contents = await readFile(snapshotPath, "utf8");
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      throw new Error(
-        "Square snapshot missing. Run `node --env-file=.env scripts/square-catalog-snapshot.mjs` before building.",
-        { cause: error },
-      );
-    }
-    throw error;
-  }
-  return normalizeProducts(JSON.parse(contents) as SquareSnapshot);
 }

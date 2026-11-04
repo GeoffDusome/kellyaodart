@@ -1,7 +1,7 @@
 # kellyaodart
 
-Static Astro website for Kelly AOD Art. Square is the product source of truth.
-Astro generates a sitemap for `https://kellyaodart.com` during builds.
+Astro website for Kelly AOD Art. Square is the product source of truth.
+Content pages are static; shop pages and the product sitemap render on demand.
 
 ## Development
 
@@ -9,33 +9,32 @@ Requires Node.js 22.23.4 or newer.
 
 ```sh
 npm install
-node --env-file=.env scripts/square-catalog-snapshot.mjs
 npm run dev
 ```
 
-The Square snapshot is required for archive and product routes. Run
-`npm run build` to fetch a fresh snapshot and create a production build.
-Local builds load `.env`; deployment builds use the host's environment variables.
+Run `npm run build` to create a production build. Builds do not contact Square.
+Local development loads `.env`; deployed routes use the host's environment variables.
 
 ## Vercel
 
-Use `npm run build` as the Build Command and `dist` as the Output Directory.
+Use Vercel's Astro framework preset and `npm run build` as the Build Command.
+Remove any Output Directory override: the Vercel adapter generates static
+pages and serverless routes in `.vercel/output`.
 In the project's environment variables, set `SQUARE_ACCESS_TOKEN` to the
 read-only token and `SQUARE_ENVIRONMENT` to `sandbox` for testing (or
 `production` for the live catalog). Set them for each deployment environment
 you use, then redeploy.
 
-Do not upload `.env` or commit the snapshot. Every build fetches its own data
-and fails if Square cannot be reached or the credentials are invalid.
+Do not upload `.env`. Square credentials are used server-side at request time.
 
 `/products/originals` and `/products/prints` list in-stock products. Each Square
-item also gets a static `/products/<category>/<slug>` page, where category is
+item has a `/products/<category>/<slug>` page, where category is
 `originals` or `prints`. Product data includes category, description,
 orientation, image URLs, variation sizes and prices, plus inventory by
 location. The current stock total combines locations; choose a fulfillment
 location before using it as a purchasable quantity.
 
-## Square catalog snapshot
+## Square catalog
 
 Create a Square developer app and a **read-only** sandbox token with
 `ITEMS_READ` and `INVENTORY_READ` permissions. Put it in a local `.env` file
@@ -43,17 +42,17 @@ Create a Square developer app and a **read-only** sandbox token with
 
 ```sh
 SQUARE_ACCESS_TOKEN=your-sandbox-token
+SQUARE_ENVIRONMENT=sandbox
 ```
 
-Run the snapshot with Node.js 20.6 or newer:
-
-```sh
-node --env-file=.env scripts/square-catalog-snapshot.mjs
-```
-
-The script writes catalog objects and inventory counts to
-`data/square-catalog-snapshot.json`; that file is ignored by Git. For a live
-catalog, set `SQUARE_ENVIRONMENT=production`.
+Shop requests fetch the catalog and inventory directly from Square. Successful
+results are cached for 60 seconds per function instance, with concurrent requests
+sharing one fetch. No disk snapshots, rebuild hooks, or client-side credentials
+are involved. New products appear without a redeploy once the cache expires.
+Square failures fail the request explicitly rather than showing an empty shop.
+Unknown products and category mismatches return 404; sold items keep their pages.
+The sitemap index links to `/sitemap-products.xml`, which uses the same live data.
+For a live catalog, set `SQUARE_ENVIRONMENT=production`.
 
 Catalog conventions agreed so far: originals and prints are separate Square
 products, each with its own landing page (`/products/originals` and
@@ -64,4 +63,31 @@ variations, named with their dimensions (for example `12x12` and `24x24`).
 Orientation comes from the Square `Orientation` custom attribute.
 
 Run the local check with
-`node --test scripts/square-catalog-snapshot.test.mjs`.
+`node --test src/lib/products.test.mjs src/lib/square.test.mjs`.
+
+## Twitch
+
+Register an app at <https://dev.twitch.tv/console/apps> and put these variables
+in your local `.env` and Vercel's Production/Preview environments:
+
+```sh
+TWITCH_CLIENT_ID=your-app-client-id
+TWITCH_CLIENT_SECRET=your-app-client-secret
+TWITCH_CHANNEL=channel_login
+```
+
+Use the channel's login name, not a URL. Never prefix credentials with `PUBLIC_`.
+Restart `npm run dev` after editing `.env`, or redeploy on Vercel.
+
+The home and `/live` pages poll `/api/twitch-live` once a minute. Live streams
+get a muted, non-autoplaying player; offline streams get a Twitch link.
+The player uses the current hostname as Twitch's required `parent`, including
+preview domains. Twitch requires HTTPS outside localhost and a minimum 400px
+player width; smaller screens use the external link.
+
+App tokens are cached until shortly before expiry and successful status checks
+for 60 seconds per function instance (and at Vercel's CDN). Errors return 503,
+not a false offline status. The calendar's "next show" can be added when the
+calendar integration exists.
+
+Run the integration's mocked check with `node --test src/lib/twitch.test.mjs`.

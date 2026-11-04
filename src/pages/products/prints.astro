@@ -1,7 +1,10 @@
 ---
 import ProductArchive from "../../components/ProductArchive.astro";
 import SiteLayout from "../../layouts/SiteLayout.astro";
-import { loadProducts } from "../../lib/products";
+import { loadProducts } from "../../lib/load-products";
+
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "no-store");
 
 const products = (await loadProducts()).filter(
   (product) => product.collection === "prints" && product.inStock,

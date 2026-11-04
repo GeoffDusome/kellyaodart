@@ -1,25 +1,25 @@
 ---
 import SiteLayout from "../../../layouts/SiteLayout.astro";
-import { loadProducts } from "../../../lib/products";
+import { loadProducts } from "../../../lib/load-products";
 
-export async function getStaticPaths() {
-  return (await loadProducts()).map((product) => {
-    if (!product.collection) {
-      throw new Error(`Product "${product.name}" must belong to Originals or Prints.`);
-    }
-    return {
-      params: { category: product.collection, slug: product.slug },
-      props: { product },
-    };
-  });
-}
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "no-store");
 
-const { product } = Astro.props;
+const { category, slug } = Astro.params;
+const product = category === "originals" || category === "prints"
+  ? (await loadProducts()).find(
+      (item) => item.collection === category && item.slug === slug,
+    )
+  : undefined;
+if (!product) Astro.response.status = 404;
 ---
 
-<SiteLayout title={`${product.name} | Kelly AOD Art`} description={product.description}>
-  <main>
-    <article>
+<SiteLayout
+  title={`${product?.name ?? "Product not found"} | Kelly AOD Art`}
+  description={product?.description}
+>
+  <main id="main-content">
+    {product ? <article>
       <h1>{product.name}</h1>
       <p>{product.description}</p>
       <p>{product.collection}</p>
@@ -51,6 +51,13 @@ const { product } = Astro.props;
           ))
         }
       </ul>
-    </article>
+    </article> : (
+      <>
+        <h1>Product not found</h1>
+        <p>This piece is no longer available at this address.</p>
+        <a href="/products/originals">Browse originals</a>
+        <a href="/products/prints">Browse prints</a>
+      </>
+    )}
   </main>
 </SiteLayout>
