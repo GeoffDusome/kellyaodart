@@ -13,8 +13,20 @@ node --env-file=.env scripts/square-catalog-snapshot.mjs
 npm run dev
 ```
 
-The Square snapshot is required for archive and product routes. Create a
-production build with `npm run build`.
+The Square snapshot is required for archive and product routes. Run
+`npm run build` to fetch a fresh snapshot and create a production build.
+Local builds load `.env`; deployment builds use the host's environment variables.
+
+## Vercel
+
+Use `npm run build` as the Build Command and `dist` as the Output Directory.
+In the project's environment variables, set `SQUARE_ACCESS_TOKEN` to the
+read-only token and `SQUARE_ENVIRONMENT` to `sandbox` for testing (or
+`production` for the live catalog). Set them for each deployment environment
+you use, then redeploy.
+
+Do not upload `.env` or commit the snapshot. Every build fetches its own data
+and fails if Square cannot be reached or the credentials are invalid.
 
 `/products/originals` and `/products/prints` list in-stock products. Each Square
 item also gets a static `/products/<category>/<slug>` page, where category is
