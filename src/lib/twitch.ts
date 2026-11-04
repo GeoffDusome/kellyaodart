@@ -11,8 +11,16 @@ export type TwitchStatus = {
 };
 
 export function createTwitchLiveCheck(config: TwitchConfig, request = fetch) {
-  if (!config.clientId || !config.clientSecret || !/^[a-z0-9_]+$/i.test(config.channel)) {
-    throw new Error("Set TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET and TWITCH_CHANNEL.");
+  const missing = [
+    !config.clientId && "TWITCH_CLIENT_ID",
+    !config.clientSecret && "TWITCH_CLIENT_SECRET",
+    !config.channel && "TWITCH_CHANNEL",
+  ].filter(Boolean);
+  if (missing.length) {
+    throw new Error(`Missing Twitch environment variables: ${missing.join(", ")}.`);
+  }
+  if (!/^[a-z0-9_]+$/i.test(config.channel)) {
+    throw new Error("TWITCH_CHANNEL must be a channel login, not a URL or @handle, with no spaces.");
   }
 
   let token: { value: string; expiresAt: number } | undefined;

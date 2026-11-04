@@ -50,7 +50,18 @@ test("expired tokens retry once; upstream failures are not reported as offline o
 });
 
 test("missing config and malformed Twitch responses fail explicitly", async () => {
-  assert.throws(() => createTwitchLiveCheck({ ...config, clientSecret: "" }), /TWITCH_CLIENT_SECRET/);
+  assert.throws(
+    () => createTwitchLiveCheck({ ...config, clientSecret: "" }),
+    { message: "Missing Twitch environment variables: TWITCH_CLIENT_SECRET." },
+  );
+  assert.throws(
+    () => createTwitchLiveCheck({ ...config, channel: "https://twitch.tv/test_channel" }),
+    /TWITCH_CHANNEL must be a channel login/,
+  );
+  assert.throws(
+    () => createTwitchLiveCheck({ ...config, channel: "test_channel " }),
+    /TWITCH_CHANNEL must be a channel login/,
+  );
   const check = createTwitchLiveCheck(config, async (url) =>
     Response.json(url.includes("oauth2")
       ? { access_token: "test-token", expires_in: 3600 }
