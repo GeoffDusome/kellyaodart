@@ -17,6 +17,7 @@ const channel = import.meta.env.TWITCH_CHANNEL;
       data-channel-link
       href={channel ? `https://www.twitch.tv/${encodeURIComponent(channel)}` : undefined}
       hidden={!channel}
+      class="brush-link"
     >Watch or follow on Twitch</a>
   </p>
   <noscript>Enable JavaScript to check whether the stream is live.</noscript>

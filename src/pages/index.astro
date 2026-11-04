@@ -9,15 +9,18 @@ import TwitchStream from "../components/TwitchStream.astro";
       <p class="eyebrow">Kelly AOD Art</p>
       <h1 id="page-title">Original paintings and art prints.</h1>
       <p>Explore original artwork and prints by Kelly AOD.</p>
+      <a class="paper-link" href="/about">About me</a>
     </section>
     <section class="collections" aria-label="Collections">
       <article class="collection" id="originals">
         <h2>Originals</h2>
         <p>Original paintings</p>
+        <a class="brush-link" href="/products/originals">Explore originals</a>
       </article>
       <article class="collection" id="prints">
         <h2>Prints</h2>
         <p>Art prints</p>
+        <a class="brush-link" href="/products/prints">Explore prints</a>
       </article>
     </section>
     <TwitchStream />
@@ -59,7 +62,7 @@ import TwitchStream from "../components/TwitchStream.astro";
     letter-spacing: -0.045em;
   }
 
-  .intro > p:last-child {
+  .intro > p:not(.eyebrow) {
     max-width: 38rem;
     margin: 1.5rem 0 0;
     color: var(--color-muted);
@@ -73,10 +76,9 @@ import TwitchStream from "../components/TwitchStream.astro";
   }
 
   .collection {
-    min-height: 14rem;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
     padding: clamp(1.5rem, 4vw, 3rem);
     border: 1px solid var(--color-line);
   }
@@ -89,6 +91,15 @@ import TwitchStream from "../components/TwitchStream.astro";
   .collection p {
     margin: 0.75rem 0 0;
     color: var(--color-muted);
+  }
+
+  .collection > a {
+    align-self: flex-start;
+    margin-top: 1.5rem;
+  }
+
+  .intro > a {
+    margin-top: 1.5rem;
   }
 
   @media (max-width: 38rem) {
