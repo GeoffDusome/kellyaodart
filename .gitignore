@@ -1,0 +1,8 @@
+/data/square-catalog-snapshot.json
+.env
+/dist/
+/.astro/
+/node_modules/
+.env.*
+!.env.example
+.DS_Store

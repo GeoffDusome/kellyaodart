@@ -1,0 +1,45 @@
+<header class="site-header">
+  <a class="wordmark" href="/">Kelly AOD Art</a>
+  <nav aria-label="Main navigation">
+    <a href="/products/originals">Originals</a>
+    <a href="/products/prints">Prints</a>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.5rem var(--space-page);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .wordmark {
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  nav {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2.5rem);
+  }
+
+  nav a {
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  @media (max-width: 38rem) {
+    .site-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+</style>

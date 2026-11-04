@@ -1,0 +1,13 @@
+---
+import ProductArchive from "../../components/ProductArchive.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { loadProducts } from "../../lib/products";
+
+const products = (await loadProducts()).filter(
+  (product) => product.collection === "originals" && product.inStock,
+);
+---
+
+<SiteLayout title="Originals | Kelly AOD Art">
+  <ProductArchive title="Originals" products={products} />
+</SiteLayout>

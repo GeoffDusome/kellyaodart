@@ -1,0 +1,36 @@
+---
+import type { Product } from "../lib/products";
+
+interface Props {
+  title: string;
+  products: Product[];
+}
+
+const { title, products } = Astro.props;
+---
+
+<main>
+  <h1>{title}</h1>
+  <ul>
+    {
+      products.map((product) => (
+        <li>
+          <a href={`/products/${product.collection}/${product.slug}`}>
+            {product.images[0] && (
+              <img src={product.images[0].url} alt={product.images[0].alt} />
+            )}
+            {product.name}
+          </a>
+          {product.price && (
+            <p>
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: product.price.currency,
+              }).format(product.price.amount / 100)}
+            </p>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</main>

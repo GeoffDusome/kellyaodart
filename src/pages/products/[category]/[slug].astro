@@ -1,0 +1,56 @@
+---
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import { loadProducts } from "../../../lib/products";
+
+export async function getStaticPaths() {
+  return (await loadProducts()).map((product) => {
+    if (!product.collection) {
+      throw new Error(`Product "${product.name}" must belong to Originals or Prints.`);
+    }
+    return {
+      params: { category: product.collection, slug: product.slug },
+      props: { product },
+    };
+  });
+}
+
+const { product } = Astro.props;
+---
+
+<SiteLayout title={`${product.name} | Kelly AOD Art`} description={product.description}>
+  <main>
+    <article>
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
+      <p>{product.collection}</p>
+      {product.orientation && <p>{product.orientation}</p>}
+      <ul>
+        {
+          product.images.map((image) => (
+            <li>
+              <img src={image.url} alt={image.alt} />
+            </li>
+          ))
+        }
+      </ul>
+      <ul>
+        {
+          product.variations.map((variation) => (
+            <li>
+              <span>{variation.size ?? "One size"}</span>
+              {variation.price && (
+                <span>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: variation.price.currency,
+                  }).format(variation.price.amount / 100)}
+                </span>
+              )}
+              <span>{variation.quantity > 0 ? `${variation.quantity} in stock` : "Sold out"}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </article>
+  </main>
+</SiteLayout>

@@ -1,0 +1,14 @@
+.skip-link {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  left: var(--space-page);
+  padding: 0.5rem 0.75rem;
+  transform: translateY(-200%);
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}

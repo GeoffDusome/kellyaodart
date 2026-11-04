@@ -1,0 +1,15 @@
+:root {
+  color-scheme: light;
+
+  --color-paper: #f7f3eb;
+  --color-ink: #29251f;
+  --color-muted: #625a4f;
+  --color-accent: #85422e;
+  --color-line: #d7cec0;
+
+  --font-body: system-ui, sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-size-body: 1.125rem;
+
+  --space-page: clamp(1.25rem, 5vw, 5rem);
+}
