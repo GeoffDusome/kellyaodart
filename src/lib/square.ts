@@ -10,9 +10,10 @@ export async function fetchCatalog(
   if (!["sandbox", "production"].includes(config.environment)) {
     throw new Error("SQUARE_ENVIRONMENT must be sandbox or production.");
   }
-  const host = config.environment === "production"
-    ? "https://connect.squareup.com"
-    : "https://connect.squareupsandbox.com";
+  const host =
+    config.environment === "production"
+      ? "https://connect.squareup.com"
+      : "https://connect.squareupsandbox.com";
 
   async function squareRequest(
     path: string,
@@ -49,7 +50,9 @@ export async function fetchCatalog(
     cursor = page.cursor;
   } while (cursor);
 
-  const ids = [...new Set(catalog.filter((item) => item.type === "ITEM_VARIATION").map((item) => item.id))];
+  const ids = [
+    ...new Set(catalog.filter((item) => item.type === "ITEM_VARIATION").map((item) => item.id)),
+  ];
   const inventory: SquareCatalog["inventory"] = [];
   for (let i = 0; i < ids.length; i += 100) {
     let inventoryCursor: string | undefined;
@@ -79,7 +82,9 @@ export function createProductLoader(fetchData: () => Promise<SquareCatalog>) {
         cached = { products, expiresAt: Date.now() + 60_000 };
         return products;
       })
-      .finally(() => { pending = undefined; });
+      .finally(() => {
+        pending = undefined;
+      });
     return pending;
   };
 }

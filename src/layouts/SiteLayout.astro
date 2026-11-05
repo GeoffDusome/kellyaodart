@@ -23,8 +23,7 @@ const seoData: SEOData = {
   ...seo,
   description: seo?.description ?? description,
   canonicalUrl:
-    seo?.canonicalUrl ??
-    (Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined),
+    seo?.canonicalUrl ?? (Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined),
   ogTitle: seo?.ogTitle ?? title,
   ogType: seo?.ogType ?? "website",
   twitterCard: seo?.twitterCard ?? "summary",
@@ -43,7 +42,9 @@ const seoData: SEOData = {
     <title>{title}</title>
   </head>
   <body class="site-body">
-    <a class="skip-link" href="#main-content">Skip to content</a>
+    <a class="skip-link" href="#main-content">
+      Skip to content
+    </a>
     <Header />
     <slot />
     <Footer />

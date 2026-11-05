@@ -95,10 +95,13 @@ test("normalizes archive and product data from a Square snapshot", () => {
   assert.equal(squareArtwork.images[0].url, "https://example.test/art.jpg");
   assert.equal(squareArtwork.variations[0].size, null);
   assert.equal(squareArtwork.price.amount, 2500);
-  assert.deepEqual(multiSize.variations.map(({ name, size, quantity }) => [name, size, quantity]), [
-    ["12x12", "12x12", 0],
-    ["24x24", "24x24", 2],
-  ]);
+  assert.deepEqual(
+    multiSize.variations.map(({ name, size, quantity }) => [name, size, quantity]),
+    [
+      ["12x12", "12x12", 0],
+      ["24x24", "24x24", 2],
+    ],
+  );
   assert.equal(multiSize.price.amount, 5000);
   assert.equal(sold.inStock, false);
 });

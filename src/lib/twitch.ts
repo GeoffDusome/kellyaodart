@@ -20,7 +20,9 @@ export function createTwitchLiveCheck(config: TwitchConfig, request = fetch) {
     throw new Error(`Missing Twitch environment variables: ${missing.join(", ")}.`);
   }
   if (!/^[a-z0-9_]+$/i.test(config.channel)) {
-    throw new Error("TWITCH_CHANNEL must be a channel login, not a URL or @handle, with no spaces.");
+    throw new Error(
+      "TWITCH_CHANNEL must be a channel login, not a URL or @handle, with no spaces.",
+    );
   }
 
   let token: { value: string; expiresAt: number } | undefined;
@@ -73,8 +75,8 @@ export function createTwitchLiveCheck(config: TwitchConfig, request = fetch) {
     const data = await response.json();
     if (
       !Array.isArray(data.data) ||
-      data.data.some((stream: { title?: unknown } | null) =>
-        !stream || typeof stream.title !== "string",
+      data.data.some(
+        (stream: { title?: unknown } | null) => !stream || typeof stream.title !== "string",
       )
     ) {
       throw new Error("Twitch returned an invalid streams response.");
@@ -90,7 +92,9 @@ export function createTwitchLiveCheck(config: TwitchConfig, request = fetch) {
 
   return async function getStatus(): Promise<TwitchStatus> {
     if (cached && cached.expiresAt > Date.now()) return cached.status;
-    pending ??= refresh().finally(() => { pending = undefined; });
+    pending ??= refresh().finally(() => {
+      pending = undefined;
+    });
     return pending;
   };
 }

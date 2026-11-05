@@ -4,7 +4,9 @@ const channel = import.meta.env.TWITCH_CHANNEL;
 
 <section class="twitch-stream" aria-label="Twitch stream" data-twitch-stream>
   <h2>Live from the studio</h2>
-  <p role="status" data-status>Checking Twitch live status...</p>
+  <p role="status" data-status>
+    Checking Twitch live status...
+  </p>
   <iframe
     title="Kelly AOD Art live on Twitch"
     width="640"
@@ -18,7 +20,9 @@ const channel = import.meta.env.TWITCH_CHANNEL;
       href={channel ? `https://www.twitch.tv/${encodeURIComponent(channel)}` : undefined}
       hidden={!channel}
       class="brush-link"
-    >Watch or follow on Twitch</a>
+    >
+      Watch or follow on Twitch
+    </a>
   </p>
   <noscript>Enable JavaScript to check whether the stream is live.</noscript>
 </section>
@@ -40,7 +44,9 @@ const channel = import.meta.env.TWITCH_CHANNEL;
         const data: TwitchStatus = await response.json();
         link.href = `https://www.twitch.tv/${encodeURIComponent(data.channel)}`;
         link.hidden = false;
-        status.textContent = data.live ? `Live now: ${data.title}` : "The studio stream is offline.";
+        status.textContent = data.live
+          ? `Live now: ${data.title}`
+          : "The studio stream is offline.";
 
         if (data.live) {
           if (!player.hasAttribute("src")) {

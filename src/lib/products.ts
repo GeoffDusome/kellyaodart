@@ -118,11 +118,9 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
       const categories = (item.categories ?? [])
         .map((category) => catalogById.get(category.id)?.category_data?.name)
         .filter((name): name is string => Boolean(name));
-      const collection =
-        categories.find((name) => /^(originals|prints)$/i.test(name))?.toLowerCase() as
-          | "originals"
-          | "prints"
-          | undefined;
+      const collection = categories
+        .find((name) => /^(originals|prints)$/i.test(name))
+        ?.toLowerCase() as "originals" | "prints" | undefined;
       const orientationValue = Object.values(object.custom_attribute_values ?? {}).find(
         (value) => value.name === "Orientation",
       );
@@ -130,7 +128,7 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
       const orientationUid = orientationValue?.selection_uid_values?.[0];
       const orientation =
         orientationId && orientationUid
-          ? orientations.get(orientationId)?.get(orientationUid) ?? null
+          ? (orientations.get(orientationId)?.get(orientationUid) ?? null)
           : null;
       const images = (item.image_ids ?? [])
         .map((id) => ({
@@ -138,11 +136,11 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
           url: catalogById.get(id)?.image_data?.url,
           alt: description || item.name!,
         }))
-        .filter((image): image is { id: string; url: string; alt: string } =>
-          Boolean(image.url),
-        );
+        .filter((image): image is { id: string; url: string; alt: string } => Boolean(image.url));
       const variations = (item.variations ?? [])
-        .filter((variation) => !variation.is_deleted && variation.item_variation_data?.sellable !== false)
+        .filter(
+          (variation) => !variation.is_deleted && variation.item_variation_data?.sellable !== false,
+        )
         .map((variation) => {
           const variationData = variation.item_variation_data;
           const inventory = inventoryByVariation.get(variation.id) ?? [];
@@ -161,16 +159,22 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
           };
         });
       const inStockVariations = variations.filter((variation) => variation.quantity > 0);
-      const price = inStockVariations
-        .filter((variation): variation is typeof variation & { price: Money } =>
-          Boolean(variation.price),
-        )
-        .map((variation) => variation.price)
-        .sort((a, b) => a.amount - b.amount)[0] ?? null;
+      const price =
+        inStockVariations
+          .filter((variation): variation is typeof variation & { price: Money } =>
+            Boolean(variation.price),
+          )
+          .map((variation) => variation.price)
+          .sort((a, b) => a.amount - b.amount)[0] ?? null;
 
       return {
         id: object.id,
-        slug: `${item.name!.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item"}-${object.id.toLowerCase()}`,
+        slug: `${
+          item
+            .name!.toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "") || "item"
+        }-${object.id.toLowerCase()}`,
         name: item.name!,
         description,
         collection: collection ?? null,

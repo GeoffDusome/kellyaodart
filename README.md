@@ -15,6 +15,26 @@ npm run dev
 Run `npm run build` to create a production build. Builds do not contact Square.
 Local development loads `.env`; deployed routes use the host's environment variables.
 
+## Code quality
+
+ESLint checks JavaScript, TypeScript, and Astro components using the recommended
+rules. Prettier handles formatting, including Astro, CSS, Markdown, and YAML.
+
+```sh
+npm run lint
+npm run format:check
+```
+
+Use `npm run lint:fix` for auto-fixable lint issues and `npm run format` to format
+the project. Generated output and dependencies are excluded.
+
+Zed formats on save using the project's Prettier configuration via
+`.zed/settings.json`. Run `npm install` and install Zed's Astro extension for
+`.astro` support.
+
+GitHub Actions runs both checks on pull requests and pushes to `main`, using
+Node.js 24 and `npm ci`. Neither check needs deployment credentials.
+
 ## Vercel
 
 Use Vercel's Astro framework preset and `npm run build` as the Build Command.
