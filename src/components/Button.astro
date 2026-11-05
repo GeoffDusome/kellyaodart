@@ -1,0 +1,176 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type Props = {
+  variant?: "brush" | "paper" | "link";
+  loading?: boolean;
+} & (
+  | (HTMLAttributes<"button"> & { as?: "button"; href?: never })
+  | (HTMLAttributes<"a"> & { as: "a"; disabled?: boolean })
+);
+
+const {
+  as: Tag = "button",
+  variant = "brush",
+  loading = false,
+  disabled = false,
+  type,
+  href,
+  class: className,
+  ...attributes
+} = Astro.props;
+const inactive = disabled || loading;
+const buttonType = Astro.props.as === "a" ? undefined : (Astro.props.type ?? "button");
+const sharedAttributes = {
+  ...attributes,
+  "class:list": ["button", variant === "link" ? "default-link" : `${variant}-link`, className],
+  "aria-busy": loading,
+};
+---
+
+{Tag === "a" ? (
+  <a
+    {...sharedAttributes}
+    type={type}
+    href={!inactive ? href : undefined}
+    aria-disabled={inactive ? true : attributes["aria-disabled"]}
+    role={inactive ? "link" : attributes.role}
+    tabindex={inactive ? -1 : attributes.tabindex}
+  >
+    {loading && <span class="spinner" aria-hidden="true"></span>}
+    <slot />
+  </a>
+) : (
+  <button {...sharedAttributes} type={buttonType} disabled={inactive}>
+    {loading && <span class="spinner" aria-hidden="true"></span>}
+    <slot />
+  </button>
+)}
+
+<style>
+  .button {
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-height: 2.75rem;
+    border-radius: 0;
+    color: var(--color-ink);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:not([hidden]) {
+      display: inline-flex;
+    }
+
+    &:not(.paper-link) {
+      border: 0;
+      background: transparent;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentcolor;
+      outline-offset: 4px;
+    }
+
+    &:disabled,
+    &[aria-disabled="true"] {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  .default-link {
+    min-height: 0;
+  }
+
+  .brush-link {
+    position: relative;
+    padding: 0.65rem 0.25rem;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0.2rem;
+      width: 100%;
+      height: 0.6rem;
+      background: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8 Q45 2 80 6 T157 4' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")
+        center / 100% 100% no-repeat;
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 350ms ease-out;
+      pointer-events: none;
+    }
+
+    &:is(:hover, :focus-visible)::after {
+      clip-path: inset(0);
+    }
+  }
+
+  .paper-link {
+    position: relative;
+    isolation: isolate;
+    padding: 0.65rem 1.25rem;
+    border: 1px solid var(--color-ink);
+    background: var(--color-paper);
+    color: var(--color-ink);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border: 1px solid var(--color-ink);
+      pointer-events: none;
+    }
+
+    &::before {
+      z-index: -2;
+      background: var(--color-accent);
+      transform: translate(3px, 3px);
+      transition: transform 180ms ease;
+    }
+
+    &::after {
+      z-index: -1;
+      background: var(--color-paper);
+    }
+
+    &:is(:hover, :focus:not(:focus-visible))::before {
+      transform: translate(7px, 7px) rotate(2deg);
+    }
+  }
+
+  .spinner {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    border: 2px solid currentcolor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brush-link::after,
+    .paper-link::before {
+      transition: none;
+    }
+
+    .paper-link:is(:hover, :focus-visible)::before {
+      transform: translate(3px, 3px);
+    }
+
+    .spinner {
+      animation: none;
+    }
+  }
+</style>

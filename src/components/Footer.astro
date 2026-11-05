@@ -1,24 +1,194 @@
+---
+import Button from "./Button.astro";
+
+const currentYear = new Date().getFullYear();
+const socialLinks = [
+  {
+    href: "https://www.facebook.com/kellyaodart",
+    label: "Facebook",
+  },
+  {
+    href: "https://www.twitch.tv/kellyaodart",
+    label: "Twitch",
+  },
+];
+const shopLinks = [
+  {
+    href: "/products/originals",
+    label: "Originals",
+  },
+  {
+    href: "/products/prints",
+    label: "Prints",
+  },
+];
+const otherLinks = [
+  {
+    href: "/about",
+    label: "About me",
+  },
+  {
+    href: "/live",
+    label: "Live",
+  },
+  {
+    href: "/contact",
+    label: "Contact me",
+  },
+];
+---
+
 <footer class="site-footer">
-  <span>Kelly AOD Art</span>
-  <a href="#main-content">Back to top</a>
+  <div class="site-footer__inner grid-width">
+    <div class="site-footer__left">
+      <Button as="a" variant="link" href="/" class="site-footer__wordmark">
+        Kelly O'Neill-Dusome Fine Art
+      </Button>
+      <p class="site-footer__description">
+        Kelly O'Neill-Dusome is a traditional realism acrylic painter specializing in waterscapes
+        and landscapes.
+      </p>
+      <div class="site-footer__cta">
+        <Button as="a" variant="paper" href="/contact">
+          Contact me
+        </Button>
+      </div>
+    </div>
+    <div class="site-footer__right">
+      <div class="site-footer__nav">
+        <div class="site-footer__nav-column">
+          <span class="site-footer__nav-column-label">Shop</span>
+          <ul class="site-footer__nav-list">
+            {shopLinks.map((link) => (
+              <li>
+                <Button as="a" href={link.href} variant="link">
+                  {link.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="site-footer__nav-column">
+          <span class="site-footer__nav-column-label">Learn</span>
+          <ul class="site-footer__nav-list">
+            {otherLinks.map((link) => (
+              <li>
+                <Button as="a" href={link.href} variant="link">
+                  {link.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="site-footer__bottom grid-width">
+    <div class="site-footer__bottom-left">
+      <div class="site-footer__social">
+        <span class="site-footer__social-label">Follow me:</span>
+        <ul class="site-footer__social-list">
+          {socialLinks.map((link) => (
+            <li>
+              <Button as="a" href={link.href} variant="link" target="_blank">
+                {link.label}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    <div class="site-footer__bottom-right">
+      <span class="site-footer__copyright">
+        Copyright &copy; {currentYear} Kelly O'Neill-Dusome Fine Art
+      </span>
+    </div>
+  </div>
 </footer>
 
 <style>
   .site-footer {
+    padding: var(--spacer-60) var(--grid-margin);
+    border-top: 1px solid var(--color-border);
+    color: var(--color-muted);
+  }
+
+  .site-footer__inner {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: var(--spacer-40);
+  }
+
+  .site-footer__wordmark {
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700 !important;
+    text-decoration: none;
+  }
+
+  .site-footer__description {
+    margin-top: var(--spacer-20);
+  }
+
+  .site-footer__cta {
+    margin-top: var(--spacer-30);
+  }
+
+  .site-footer__nav {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: var(--spacer-70);
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .site-footer__nav-column-label {
+    display: block;
+    font: inherit;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .site-footer__nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacer-20);
+    margin-top: var(--spacer-20);
+  }
+
+  .site-footer__bottom {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1.5rem;
-    padding: 1.5rem var(--space-page);
-    border-top: 1px solid var(--color-line);
-    color: var(--color-muted);
-    font-size: 0.95rem;
+    gap: var(--spacer-40);
+    margin-top: var(--spacer-60);
   }
 
-  a {
-    min-height: 2.75rem;
-    display: inline-flex;
+  .site-footer__social {
+    display: flex;
     align-items: center;
-    color: inherit;
+    gap: var(--spacer-20);
+  }
+
+  .site-footer__social-label {
+    display: block;
+    font: inherit;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .site-footer__social-list {
+    display: flex;
+    align-items: center;
+    gap: var(--spacer-20);
+  }
+
+  .site-footer__copyright {
+    font-size: var(--font-size-05);
+  }
+
+  .site-footer .default-link {
+    font-weight: 400;
   }
 </style>

@@ -1,26 +1,61 @@
+---
+import Button from "./Button.astro";
+
+const navigationItems = [
+  {
+    href: "/about",
+    label: "About",
+  },
+  {
+    href: "/products/originals",
+    label: "Originals",
+  },
+  {
+    href: "/products/originals",
+    label: "Prints",
+  },
+  {
+    href: "/live",
+    label: "Live",
+  },
+];
+---
+
 <header class="site-header">
-  <a class="wordmark" href="/">
-    Kelly AOD Art
-  </a>
-  <nav aria-label="Main navigation">
-    <a href="/about">About</a>
-    <a href="/products/originals">Originals</a>
-    <a href="/products/prints">Prints</a>
-    <a href="/live">Live</a>
-  </nav>
+  <div class="site-header__inner grid-width">
+    <Button as="a" variant="link" href="/" class="site-header__wordmark">
+      Kelly O'Neill-Dusome Fine Art
+    </Button>
+    <nav class="site-header__navigation" aria-label="Main navigation">
+      <ul class="site-header__navgation-list">
+        {navigationItems.map((item) => (
+          <li class="site-header__navigation-list-item">
+            <Button as="a" variant="link" href={item.href} class="site-header__navigation-link">
+              {item.label}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
 </header>
 
 <style>
   .site-header {
+    position: sticky;
+    top: 0;
+    padding: var(--spacer-20) var(--grid-margin);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .site-header__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
-    padding: 1.5rem var(--space-page);
-    border-bottom: 1px solid var(--color-line);
   }
 
-  .wordmark {
+  .site-header__wordmark {
     color: var(--color-ink);
     font-family: var(--font-display);
     font-size: 1.35rem;
@@ -28,22 +63,9 @@
     text-decoration: none;
   }
 
-  nav {
+  .site-header__navgation-list {
     display: flex;
-    gap: clamp(1rem, 3vw, 2.5rem);
-  }
-
-  nav a {
-    min-height: 2.75rem;
-    display: inline-flex;
     align-items: center;
-  }
-
-  @media (max-width: 38rem) {
-    .site-header {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+    gap: var(--spacer-40);
   }
 </style>

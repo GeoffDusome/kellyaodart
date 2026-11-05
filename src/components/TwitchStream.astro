@@ -1,4 +1,6 @@
 ---
+import Button from "./Button.astro";
+
 const channel = import.meta.env.TWITCH_CHANNEL;
 ---
 
@@ -15,14 +17,15 @@ const channel = import.meta.env.TWITCH_CHANNEL;
     hidden
   ></iframe>
   <p>
-    <a
+    <Button
+      as="a"
+      variant="brush"
       data-channel-link
       href={channel ? `https://www.twitch.tv/${encodeURIComponent(channel)}` : undefined}
       hidden={!channel}
-      class="brush-link"
     >
       Watch or follow on Twitch
-    </a>
+    </Button>
   </p>
   <noscript>Enable JavaScript to check whether the stream is live.</noscript>
 </section>

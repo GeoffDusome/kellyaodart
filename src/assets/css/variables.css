@@ -5,11 +5,35 @@
   --color-ink: #29251f;
   --color-muted: #625a4f;
   --color-accent: #85422e;
-  --color-line: #d7cec0;
+  --color-border: #d7cec0;
 
-  --font-body: system-ui, sans-serif;
-  --font-display: Georgia, "Times New Roman", serif;
-  --font-size-body: 1.125rem;
+  /* White text on these meets WCAG AA (4.5:1+). shade-orange-100–200 do not. */
+  --color-primary: var(--shade-orange-400);
+  --color-primary-hover: var(--shade-orange-500);
+  --color-on-primary: var(--color-white);
 
-  --space-page: clamp(1.25rem, 5vw, 5rem);
+  --grid-margin: round(down, clamp(1rem, -0.3rem + 6.5vw, 7.5rem), 2px);
+  --grid-gutter: round(down, clamp(1.5rem, 1.2rem + 1.5vw, 3rem), 2px);
+  --grid-content-width: 840px;
+  --grid-wide-width: 1136px;
+  --grid-max-width: 1680px;
+
+  --font-size-base: round(down, clamp(1rem, 0.9423rem + 0.2564vw, 1.25rem), 2px);
+  --font-size-05: round(down, clamp(0.8rem, 0.7538rem + 0.2051vw, 1rem), 2px);
+  --font-size-10: round(down, clamp(1.25rem, 1.1779rem + 0.3205vw, 1.5625rem), 2px);
+  --font-size-20: round(down, clamp(1.5625rem, 1.4724rem + 0.4006vw, 1.9531rem), 2px);
+  --font-size-30: round(down, clamp(1.9531rem, 1.8404rem + 0.5008vw, 2.4414rem), 2px);
+  --font-size-40: round(down, clamp(2.4414rem, 2.3006rem + 0.626vw, 3.0518rem), 2px);
+  --font-size-50: round(down, clamp(3.0518rem, 2.8757rem + 0.7825vw, 3.8147rem), 2px);
+  --font-size-60: round(down, clamp(3.8147rem, 3.5946rem + 0.9781vw, 4.7684rem), 2px);
+  --font-size-70: round(down, clamp(4.7684rem, 4.4933rem + 1.2227vw, 5.9605rem), 2px);
+  --font-size-80: round(down, clamp(5.9605rem, 5.6166rem + 1.5283vw, 7.4506rem), 2px);
+
+  --spacer-10: round(down, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem), 2px);
+  --spacer-20: round(down, clamp(0.75rem, 0.7rem + 0.25vw, 1rem), 2px);
+  --spacer-30: round(down, clamp(1rem, 0.9rem + 0.5vw, 1.5rem), 2px);
+  --spacer-40: round(down, clamp(1.5rem, 1.4rem + 0.5vw, 2rem), 2px);
+  --spacer-50: round(down, clamp(2rem, 1.8rem + 1vw, 3rem), 2px);
+  --spacer-60: round(down, clamp(3rem, 2.8rem + 1vw, 4rem), 2px);
+  --spacer-70: round(down, clamp(4rem, 3.6rem + 2vw, 6rem), 2px);
 }

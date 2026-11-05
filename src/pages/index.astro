@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import TwitchStream from "../components/TwitchStream.astro";
+import Button from "../components/Button.astro";
 ---
 
 <SiteLayout>
@@ -9,24 +10,24 @@ import TwitchStream from "../components/TwitchStream.astro";
       <p class="eyebrow">Kelly AOD Art</p>
       <h1 id="page-title">Original paintings and art prints.</h1>
       <p>Explore original artwork and prints by Kelly AOD.</p>
-      <a class="paper-link" href="/about">
+      <Button as="a" variant="paper" href="/about">
         About me
-      </a>
+      </Button>
     </section>
     <section class="collections" aria-label="Collections">
       <article class="collection" id="originals">
         <h2>Originals</h2>
         <p>Original paintings</p>
-        <a class="brush-link" href="/products/originals">
+        <Button as="a" variant="brush" href="/products/originals">
           Explore originals
-        </a>
+        </Button>
       </article>
       <article class="collection" id="prints">
         <h2>Prints</h2>
         <p>Art prints</p>
-        <a class="brush-link" href="/products/prints">
+        <Button as="a" variant="brush" href="/products/prints">
           Explore prints
-        </a>
+        </Button>
       </article>
     </section>
     <TwitchStream />
