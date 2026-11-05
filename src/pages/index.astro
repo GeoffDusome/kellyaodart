@@ -2,18 +2,19 @@
 import SiteLayout from "../layouts/SiteLayout.astro";
 import TwitchStream from "../components/TwitchStream.astro";
 import Button from "../components/Button.astro";
+import Hero from "../components/Hero.astro";
 ---
 
 <SiteLayout>
   <main class="home" id="main-content">
-    <section class="intro" aria-labelledby="page-title">
-      <p class="eyebrow">Kelly AOD Art</p>
-      <h1 id="page-title">Original paintings and art prints.</h1>
-      <p>Explore original artwork and prints by Kelly AOD.</p>
-      <Button as="a" variant="paper" href="/about">
-        About me
-      </Button>
-    </section>
+    <Hero
+      title="Original paintings and reproductions"
+      description="Traditional realism waterscapes and landscapes acrylic paintings."
+      button={{
+        href: "/about",
+        label: "About me",
+      }}
+    />
     <section class="collections" aria-label="Collections">
       <article class="collection" id="originals">
         <h2>Originals</h2>
@@ -35,46 +36,6 @@ import Button from "../components/Button.astro";
 </SiteLayout>
 
 <style>
-  .home {
-    width: calc(100% - var(--space-page) - var(--space-page));
-    max-width: 80rem;
-    margin-inline: auto;
-  }
-
-  .intro {
-    max-width: 56rem;
-    padding-block: clamp(5rem, 14vw, 12rem);
-  }
-
-  .eyebrow {
-    margin: 0 0 1rem;
-    color: var(--color-muted);
-    font-size: 0.875rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  h1,
-  h2 {
-    font-family: var(--font-display);
-    font-weight: 400;
-    line-height: 1.1;
-  }
-
-  h1 {
-    max-width: 12ch;
-    margin: 0;
-    font-size: clamp(3rem, 8vw, 6.5rem);
-    letter-spacing: -0.045em;
-  }
-
-  .intro > p:not(.eyebrow) {
-    max-width: 38rem;
-    margin: 1.5rem 0 0;
-    color: var(--color-muted);
-  }
-
   .collections {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

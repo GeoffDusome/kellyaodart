@@ -1,0 +1,90 @@
+---
+import Button from "./Button.astro";
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  button?: {
+    href: string;
+    label: string;
+  };
+}
+
+const { eyebrow = null, title, description = null, button = null } = Astro.props;
+---
+
+<section class="hero full-width" aria-labelledby="page-title">
+  <div class="hero__media">
+    <img src="https://placehold.co/1920x1080" alt="placeholder image" />
+  </div>
+  <div class="hero__inner grid-width">
+    {eyebrow ? <p class="hero__eyebrow">{eyebrow}</p> : null}
+    <h1 id="page-title" class="hero__title content-width">
+      {title}
+    </h1>
+    {description ? <p class="hero__description content-width">{description}</p> : null}
+    {button ? (
+      <div class="hero__cta">
+        <Button as="a" variant="paper" href={button.href}>
+          {button.label}
+        </Button>
+      </div>
+    ) : null}
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    padding: var(--spacer-70) var(--grid-margin);
+  }
+
+  .hero__media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero__eyebrow {
+    margin-bottom: var(--spacer-20);
+    color: var(--color-muted);
+    font-size: var(--font-size-05);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .hero__title {
+    margin-left: 0;
+    margin-right: auto;
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.1;
+  }
+
+  .hero__description {
+    margin-top: var(--spacer-20);
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .hero__cta {
+    margin-top: var(--spacer-40);
+  }
+</style>
