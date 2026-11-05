@@ -1,0 +1,113 @@
+---
+import { Icon } from "astro-icon/components";
+import Button from "./Button.astro";
+
+interface Props {
+  boxes: {
+    icon?: string;
+    title: string;
+    description: string;
+    button: {
+      href: string;
+      label: string;
+    };
+  }[];
+}
+
+const { boxes } = Astro.props;
+
+if (!boxes) return;
+---
+
+<section class="boxes" aria-label="Collections">
+  <div class="boxes__inner grid-width">
+    {boxes.map((box) => (
+      <div class="box">
+        <div class="box__inner">
+          {box.icon ? (
+            <div class="box__icon">
+              <Icon name={box.icon} />
+            </div>
+          ) : null}
+          <h2 class="box__title">{box.title}</h2>
+          <p class="box__description">{box.description}</p>
+          {box.button ? (
+            <div class="box__cta">
+              <Button as="span" variant="brush">
+                {box.button.label}
+              </Button>
+            </div>
+          ) : null}
+        </div>
+        <a href={box.button.href} class="box__overlay-link" aria-label={box.button.label}></a>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .boxes {
+    padding: var(--spacer-70) 0;
+  }
+
+  .boxes__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacer-40);
+    position: relative;
+    z-index: 1;
+  }
+
+  .box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding: var(--spacer-30);
+    border: 1px solid var(--color-border);
+
+    &:is(:hover, :focus-within) .brush-link::after {
+      clip-path: inset(0);
+    }
+  }
+
+  .box__icon {
+    width: 64px;
+    height: 64px;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .box__title {
+    margin-top: var(--spacer-20);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .box__description {
+    margin-top: var(--spacer-20);
+  }
+
+  .box__cta {
+    margin-top: var(--spacer-30);
+  }
+
+  .box__overlay-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  @media (width <= 1000px) {
+    .boxes__inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

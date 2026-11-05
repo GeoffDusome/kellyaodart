@@ -20,7 +20,7 @@ test("normalizes archive and product data from a Square snapshot", () => {
               },
             },
           ],
-          categories: [{ id: "prints" }],
+          categories: [{ id: "reproductions" }],
           image_ids: ["image-1"],
         },
         custom_attribute_values: {
@@ -52,7 +52,7 @@ test("normalizes archive and product data from a Square snapshot", () => {
               },
             },
           ],
-          categories: [{ id: "prints" }],
+          categories: [{ id: "reproductions" }],
         },
       },
       {
@@ -64,7 +64,7 @@ test("normalizes archive and product data from a Square snapshot", () => {
           categories: [{ id: "originals" }],
         },
       },
-      { id: "prints", type: "CATEGORY", category_data: { name: "Prints" } },
+      { id: "reproductions", type: "CATEGORY", category_data: { name: "Reproductions" } },
       { id: "originals", type: "CATEGORY", category_data: { name: "Originals" } },
       { id: "image-1", type: "IMAGE", image_data: { url: "https://example.test/art.jpg" } },
       {
@@ -90,7 +90,7 @@ test("normalizes archive and product data from a Square snapshot", () => {
   const multiSize = products.find((product) => product.id === "art-2");
   const sold = products.find((product) => product.id === "sold");
 
-  assert.equal(squareArtwork.collection, "prints");
+  assert.equal(squareArtwork.collection, "reproductions");
   assert.equal(squareArtwork.orientation, "Square / Circle");
   assert.equal(squareArtwork.images[0].url, "https://example.test/art.jpg");
   assert.equal(squareArtwork.variations[0].size, null);
@@ -104,4 +104,37 @@ test("normalizes archive and product data from a Square snapshot", () => {
   );
   assert.equal(multiSize.price.amount, 5000);
   assert.equal(sold.inStock, false);
+});
+
+test("reproductions archive includes only reproductions, case-insensitively", () => {
+  const names = ["Reproductions", "REPRODUCTIONS", "Originals", "Other"];
+  const products = normalizeProducts({
+    catalog: names.flatMap((name) => [
+      { id: name, type: "CATEGORY", category_data: { name } },
+      {
+        id: `item-${name}`,
+        type: "ITEM",
+        item_data: {
+          name,
+          categories: [{ id: name }],
+          variations: [{ id: `variation-${name}`, item_variation_data: { name: "Regular" } }],
+        },
+      },
+    ]),
+    inventory: names.map((name) => ({
+      catalog_object_id: `variation-${name}`,
+      state: "IN_STOCK",
+      quantity: "1",
+    })),
+  });
+
+  assert.deepEqual(
+    products
+      .filter((product) => product.collection === "reproductions" && product.inStock)
+      .map((product) => product.id)
+      .sort(),
+    ["item-REPRODUCTIONS", "item-Reproductions"],
+  );
+  assert.equal(products.find((product) => product.name === "Originals").collection, "originals");
+  assert.equal(products.find((product) => product.name === "Other").collection, null);
 });

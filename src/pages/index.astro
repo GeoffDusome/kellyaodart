@@ -1,78 +1,42 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import TwitchStream from "../components/TwitchStream.astro";
-import Button from "../components/Button.astro";
 import Hero from "../components/Hero.astro";
+import Boxes from "../components/Boxes.astro";
 ---
 
 <SiteLayout>
   <main class="home" id="main-content">
     <Hero
       title="Original paintings and reproductions"
-      description="Traditional realism waterscapes and landscapes acrylic paintings."
+      description="Traditional realism waterscape and landscape acrylic paintings."
       button={{
         href: "/about",
         label: "About me",
       }}
     />
-    <section class="collections" aria-label="Collections">
-      <article class="collection" id="originals">
-        <h2>Originals</h2>
-        <p>Original paintings</p>
-        <Button as="a" variant="brush" href="/products/originals">
-          Explore originals
-        </Button>
-      </article>
-      <article class="collection" id="prints">
-        <h2>Prints</h2>
-        <p>Art prints</p>
-        <Button as="a" variant="brush" href="/products/prints">
-          Explore prints
-        </Button>
-      </article>
-    </section>
+    <Boxes
+      boxes={[
+        {
+          icon: "wall-art",
+          title: "Originals",
+          description: "Shop all of my original acrylic paintings.",
+          button: {
+            href: "/products/originals",
+            label: "Explore my originals",
+          },
+        },
+        {
+          icon: "image",
+          title: "Reproductions",
+          description: "Shop reproductions of my original paintings. Great for gifts!",
+          button: {
+            href: "/products/reproductions",
+            label: "Explore my reproductions",
+          },
+        },
+      ]}
+    />
     <TwitchStream />
   </main>
 </SiteLayout>
-
-<style>
-  .collections {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-    padding-bottom: clamp(4rem, 10vw, 8rem);
-  }
-
-  .collection {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: clamp(1.5rem, 4vw, 3rem);
-    border: 1px solid var(--color-line);
-  }
-
-  .collection h2 {
-    margin: 0;
-    font-size: clamp(2rem, 4vw, 3.25rem);
-  }
-
-  .collection p {
-    margin: 0.75rem 0 0;
-    color: var(--color-muted);
-  }
-
-  .collection > a {
-    align-self: flex-start;
-    margin-top: 1.5rem;
-  }
-
-  .intro > a {
-    margin-top: 1.5rem;
-  }
-
-  @media (max-width: 38rem) {
-    .collections {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>

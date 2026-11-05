@@ -47,9 +47,9 @@ you use, then redeploy.
 
 Do not upload `.env`. Square credentials are used server-side at request time.
 
-`/products/originals` and `/products/prints` list in-stock products. Each Square
+`/products/originals` and `/products/reproductions` list in-stock products. Each Square
 item has a `/products/<category>/<slug>` page, where category is
-`originals` or `prints`. Product data includes category, description,
+`originals` or `reproductions`. Product data includes category, description,
 orientation, image URLs, variation sizes and prices, plus inventory by
 location. The current stock total combines locations; choose a fulfillment
 location before using it as a purchasable quantity.
@@ -74,11 +74,13 @@ Unknown products and category mismatches return 404; sold items keep their pages
 The sitemap index links to `/sitemap-products.xml`, which uses the same live data.
 For a live catalog, set `SQUARE_ENVIRONMENT=production`.
 
-Catalog conventions agreed so far: originals and prints are separate Square
+Catalog conventions agreed so far: originals and reproductions are separate Square
 products, each with its own landing page (`/products/originals` and
-`/products/prints`), so no
-original-vs-print filter is needed. Originals and new prints have one size;
-`Regular` means there are no size choices. Older prints may have multiple size
+`/products/reproductions`), so no
+original-vs-reproduction filter is needed. Square category `Reproductions` maps
+to reproductions; `Originals` maps to originals.
+Originals and new reproductions have one size;
+`Regular` means there are no size choices. Older reproductions may have multiple size
 variations, named with their dimensions (for example `12x12` and `24x24`).
 Orientation comes from the Square `Orientation` custom attribute.
 
@@ -99,8 +101,11 @@ TWITCH_CHANNEL=channel_login
 Use the channel's login name, not a URL. Never prefix credentials with `PUBLIC_`.
 Restart `npm run dev` after editing `.env`, or redeploy on Vercel.
 
-The home and `/live` pages poll `/api/twitch-live` once a minute. Live streams
-get a muted, non-autoplaying player; offline streams get a Twitch link.
+The home and `/live` pages call `/api/twitch-live` once on page load. The player
+shows the live stream or, when offline, the most recent archived broadcast
+(VOD), muted and without autoplay. Enable past-broadcast storage in Twitch to
+make VODs available; if none are saved or they have expired, only the Twitch
+link is shown.
 The player uses the current hostname as Twitch's required `parent`, including
 preview domains. Twitch requires HTTPS outside localhost and a minimum 400px
 player width; smaller screens use the external link.

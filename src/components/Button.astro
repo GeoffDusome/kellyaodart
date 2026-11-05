@@ -7,6 +7,7 @@ type Props = {
 } & (
   | (HTMLAttributes<"button"> & { as?: "button"; href?: never })
   | (HTMLAttributes<"a"> & { as: "a"; disabled?: boolean })
+  | (HTMLAttributes<"span"> & { as: "span"; disabled?: boolean; href?: never; type?: never })
 );
 
 const {
@@ -40,6 +41,15 @@ const sharedAttributes = {
     {loading && <span class="spinner" aria-hidden="true"></span>}
     <slot />
   </a>
+) : Tag === "span" ? (
+  <span
+    {...sharedAttributes}
+    aria-disabled={inactive ? true : attributes["aria-disabled"]}
+    tabindex={inactive ? -1 : attributes.tabindex}
+  >
+    {loading && <span class="spinner" aria-hidden="true"></span>}
+    <slot />
+  </span>
 ) : (
   <button {...sharedAttributes} type={buttonType} disabled={inactive}>
     {loading && <span class="spinner" aria-hidden="true"></span>}

@@ -4,30 +4,33 @@ import Button from "./Button.astro";
 const channel = import.meta.env.TWITCH_CHANNEL;
 ---
 
-<section class="twitch-stream" aria-label="Twitch stream" data-twitch-stream>
-  <h2>Live from the studio</h2>
-  <p role="status" data-status>
-    Checking Twitch live status...
-  </p>
-  <iframe
-    title="Kelly AOD Art live on Twitch"
-    width="640"
-    height="360"
-    allowfullscreen
-    hidden
-  ></iframe>
-  <p>
-    <Button
-      as="a"
-      variant="brush"
-      data-channel-link
-      href={channel ? `https://www.twitch.tv/${encodeURIComponent(channel)}` : undefined}
-      hidden={!channel}
-    >
-      Watch or follow on Twitch
-    </Button>
-  </p>
-  <noscript>Enable JavaScript to check whether the stream is live.</noscript>
+<section class="twitch full-width" aria-label="Twitch stream" data-twitch-stream>
+  <div class="twitch__inner grid-width">
+    <h2 class="twitch__title">Live from the studio</h2>
+    <p class="twitch__status" role="status" data-status>
+      Checking Twitch live status...
+    </p>
+    <div class="twitch__embed">
+      <iframe
+        title="Kelly AOD Art on Twitch"
+        width="1920"
+        height="1080"
+        allowfullscreen
+        hidden
+      ></iframe>
+    </div>
+    <div class="twitch__cta">
+      <Button
+        as="a"
+        variant="paper"
+        data-channel-link
+        href={channel ? `https://www.twitch.tv/${encodeURIComponent(channel)}` : undefined}
+        hidden={!channel}
+      >
+        Watch or follow on Twitch
+      </Button>
+    </div>
+  </div>
 </section>
 
 <script>
@@ -41,7 +44,7 @@ const channel = import.meta.env.TWITCH_CHANNEL;
     async function checkStatus() {
       try {
         const response = await fetch("/api/twitch-live", {
-          signal: AbortSignal.timeout(15_000),
+          signal: AbortSignal.timeout(60_000),
         });
         if (!response.ok) throw new Error(`Twitch status request failed (${response.status}).`);
         const data: TwitchStatus = await response.json();
@@ -49,19 +52,19 @@ const channel = import.meta.env.TWITCH_CHANNEL;
         link.hidden = false;
         status.textContent = data.live
           ? `Live now: ${data.title}`
-          : "The studio stream is offline.";
+          : data.videoId
+            ? `Latest broadcast: ${data.title}`
+            : "The studio stream is offline and no past broadcasts are available.";
 
-        if (data.live) {
-          if (!player.hasAttribute("src")) {
-            const url = new URL("https://player.twitch.tv/");
-            url.search = new URLSearchParams({
-              channel: data.channel,
-              parent: window.location.hostname,
-              autoplay: "false",
-              muted: "true",
-            }).toString();
-            player.src = url.href;
-          }
+        if (data.live || data.videoId) {
+          const url = new URL("https://player.twitch.tv/");
+          url.search = new URLSearchParams({
+            ...(data.live ? { channel: data.channel } : { video: `v${data.videoId}` }),
+            parent: window.location.hostname,
+            autoplay: "false",
+            muted: "true",
+          }).toString();
+          player.src = url.href;
           player.hidden = false;
         } else {
           player.hidden = true;
@@ -69,32 +72,44 @@ const channel = import.meta.env.TWITCH_CHANNEL;
         }
       } catch (error) {
         console.error("[twitch-stream]", error);
-        status.textContent = "Unable to check live status. Please try Twitch directly.";
+        status.textContent = "Unable to load a Twitch video. Please try Twitch directly.";
         player.hidden = true;
         player.removeAttribute("src");
       }
     }
 
-    async function poll() {
-      await checkStatus();
-      window.setTimeout(poll, 60_000);
-    }
-    void poll();
+    void checkStatus();
   }
 </script>
 
 <style>
-  .twitch-stream {
-    padding-block: 2rem;
+  .twitch {
+    padding: var(--spacer-70);
   }
 
-  iframe {
+  .twitch__title {
+    font-weight: var(--font-weight-regular);
+  }
+
+  .twitch__status {
+    margin-top: var(--spacer-20);
+  }
+
+  .twitch__embed {
+    margin-top: var(--spacer-30);
     width: 100%;
-    max-width: 60rem;
-    height: auto;
-    min-height: 300px;
     aspect-ratio: 16 / 9;
-    border: 0;
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      object-fit: cover;
+    }
+  }
+
+  .twitch__cta {
+    margin-top: var(--spacer-30);
   }
 
   /* Twitch requires at least 400px of player width; smaller screens use the link. */

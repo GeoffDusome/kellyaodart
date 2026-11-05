@@ -51,7 +51,7 @@ export type Product = {
   slug: string;
   name: string;
   description: string;
-  collection: "originals" | "prints" | null;
+  collection: "originals" | "reproductions" | null;
   categories: string[];
   orientation: string | null;
   images: { id: string; url: string; alt: string }[];
@@ -118,9 +118,11 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
       const categories = (item.categories ?? [])
         .map((category) => catalogById.get(category.id)?.category_data?.name)
         .filter((name): name is string => Boolean(name));
-      const collection = categories
-        .find((name) => /^(originals|prints)$/i.test(name))
-        ?.toLowerCase() as "originals" | "prints" | undefined;
+      const collectionName = categories
+        .find((name) => /^(originals|reproductions)$/i.test(name))
+        ?.toLowerCase();
+      const collection =
+        collectionName === "originals" ? "originals" : collectionName ? "reproductions" : null;
       const orientationValue = Object.values(object.custom_attribute_values ?? {}).find(
         (value) => value.name === "Orientation",
       );

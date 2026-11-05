@@ -1,11 +1,16 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import Hero from "../components/Hero.astro";
 import TwitchStream from "../components/TwitchStream.astro";
 ---
 
 <SiteLayout title="Live | Kelly AOD Art" description="Watch Kelly AOD Art live on Twitch.">
   <main id="main-content">
-    <h1>Watch on Twitch</h1>
+    <Hero
+      title="Live on Twitch"
+      description="I stream my painting on Twitch on Wednesday and Friday Afternoons"
+      button={{ href: "https://www.twitch.tv/kellyaodart", label: "Follow me on Twitch" }}
+    />
     <TwitchStream />
   </main>
 </SiteLayout>

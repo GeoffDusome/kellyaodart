@@ -7,10 +7,10 @@ export const prerender = false;
 Astro.response.headers.set("Cache-Control", "no-store");
 
 const products = (await loadProducts()).filter(
-  (product) => product.collection === "prints" && product.inStock,
+  (product) => product.collection === "reproductions" && product.inStock,
 );
 ---
 
-<SiteLayout title="Prints | Kelly AOD Art">
-  <ProductArchive title="Prints" products={products} />
+<SiteLayout title="Reproductions | Kelly AOD Art">
+  <ProductArchive title="Reproductions" products={products} />
 </SiteLayout>

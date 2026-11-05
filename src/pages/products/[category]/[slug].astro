@@ -7,7 +7,7 @@ Astro.response.headers.set("Cache-Control", "no-store");
 
 const { category, slug } = Astro.params;
 const product =
-  category === "originals" || category === "prints"
+  category === "originals" || category === "reproductions"
     ? (await loadProducts()).find((item) => item.collection === category && item.slug === slug)
     : undefined;
 if (!product) Astro.response.status = 404;
@@ -53,7 +53,7 @@ if (!product) Astro.response.status = 404;
         <h1>Product not found</h1>
         <p>This piece is no longer available at this address.</p>
         <a href="/products/originals">Browse originals</a>
-        <a href="/products/prints">Browse prints</a>
+        <a href="/products/reproductions">Browse reproductions</a>
       </>
     )}
   </main>

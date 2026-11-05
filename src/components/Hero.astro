@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import Button from "./Button.astro";
 
 interface Props {
@@ -16,7 +17,12 @@ const { eyebrow = null, title, description = null, button = null } = Astro.props
 
 <section class="hero full-width" aria-labelledby="page-title">
   <div class="hero__media">
-    <img src="https://placehold.co/1920x1080" alt="placeholder image" />
+    <Image
+      src="https://placehold.co/1920x1080"
+      alt="placeholder image"
+      width="1920"
+      height="1080"
+    />
   </div>
   <div class="hero__inner grid-width">
     {eyebrow ? <p class="hero__eyebrow">{eyebrow}</p> : null}

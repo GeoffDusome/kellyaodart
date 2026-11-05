@@ -7,59 +7,63 @@ import SiteLayout from "../layouts/SiteLayout.astro";
   description="Meet Kelly O'Neill-Dusome, a Michigan artist with a passion for painting water, unique wave formations, and dramatic skies."
 >
   <main id="main-content">
-    <h1>About me</h1>
-    <p>
-      Kelly O'Neill-Dusome was born and raised in southwest Michigan, USA where she saw and was
-      taught the beauty of nature and the things around her. She has always noticed and admired the
-      small details and nuances of her environment, noting the way the colors blended in a sunset or
-      the way the shadows sat on a person's face. Kelly loved to incorporate art into every aspect
-      of her life-whether it was doodling during class, making elaborate books and cards for her
-      family and friends, or creating artsy desserts for her family's birthdays.
-    </p>
-    <p>
-      Her adult life originally had taken a less artistic academic route. She received her
-      Bachelor's of Science in Psychology and Anthropology from Grand Valley State University in
-      2011. However, her artistic inclination pushed her to pursue a career in cake decorating, and
-      she received a formal baking and decorating education at Secchia Institute for Culinary
-      Education where she obtained her Certificate of Baking and Pastry Arts in 2014.
-    </p>
-    <p>
-      Kelly had found joy creating beautiful custom cakes and desserts for thousands of customers,
-      while also painting on the side for friends and family. Unfortunately the unforgiving nature
-      of baking and decorating left Kelly with a chronic wrist and forearm disability on both arms
-      in 2017. She was no longer able to bake or decorate as a career due to the pain. Through years
-      of surgeries, medications and therapies, she finally was able to start up painting as a form
-      of wrist therapy since it was less stress on her arms. Unlike cake decorating, Kelly was able
-      to paint for hours as long as she wore her wrist braces and took her medicine! She quickly
-      realized that painting also provided her with mental therapy, as it always relaxed her to
-      paint. The mental impact painting had on Kelly's life was indescribable. Through all the
-      twists and turns of growing up, career choices and health problems, painting kept on returning
-      to her like an anchor. That, combined with an incredibly supportive support system, Kelly
-      finally knew that painting was what she was meant to do.
-    </p>
-    <p>
-      Kelly's specialty is painting water. She is especially drawn to unique wave formations and
-      dramatic skies. She paints many other subjects, but she seems to always get pulled back to
-      waterscapes. Her style leans on the photo-realistic side and she always aims to make each
-      painting as real and eye-catching as possible. Kelly hopes her passion and devotion reflects
-      in every piece she paints, and also hopes to inspire others to follow their dreams, no matter
-      how many obstacles come in the way.
-    </p>
+    <div class="content wide-width">
+      <h1>About me</h1>
+      <p>
+        Kelly O'Neill-Dusome was born and raised in southwest Michigan, USA where she saw and was
+        taught the beauty of nature and the things around her. She has always noticed and admired
+        the small details and nuances of her environment, noting the way the colors blended in a
+        sunset or the way the shadows sat on a person's face. Kelly loved to incorporate art into
+        every aspect of her life-whether it was doodling during class, making elaborate books and
+        cards for her family and friends, or creating artsy desserts for her family's birthdays.
+      </p>
+      <p>
+        Her adult life originally had taken a less artistic academic route. She received her
+        Bachelor's of Science in Psychology and Anthropology from Grand Valley State University in
+        2011. However, her artistic inclination pushed her to pursue a career in cake decorating,
+        and she received a formal baking and decorating education at Secchia Institute for Culinary
+        Education where she obtained her Certificate of Baking and Pastry Arts in 2014.
+      </p>
+      <p>
+        Kelly had found joy creating beautiful custom cakes and desserts for thousands of customers,
+        while also painting on the side for friends and family. Unfortunately the unforgiving nature
+        of baking and decorating left Kelly with a chronic wrist and forearm disability on both arms
+        in 2017. She was no longer able to bake or decorate as a career due to the pain. Through
+        years of surgeries, medications and therapies, she finally was able to start up painting as
+        a form of wrist therapy since it was less stress on her arms. Unlike cake decorating, Kelly
+        was able to paint for hours as long as she wore her wrist braces and took her medicine! She
+        quickly realized that painting also provided her with mental therapy, as it always relaxed
+        her to paint. The mental impact painting had on Kelly's life was indescribable. Through all
+        the twists and turns of growing up, career choices and health problems, painting kept on
+        returning to her like an anchor. That, combined with an incredibly supportive support
+        system, Kelly finally knew that painting was what she was meant to do.
+      </p>
+      <p>
+        Kelly's specialty is painting water. She is especially drawn to unique wave formations and
+        dramatic skies. She paints many other subjects, but she seems to always get pulled back to
+        waterscapes. Her style leans on the photo-realistic side and she always aims to make each
+        painting as real and eye-catching as possible. Kelly hopes her passion and devotion reflects
+        in every piece she paints, and also hopes to inspire others to follow their dreams, no
+        matter how many obstacles come in the way.
+      </p>
+    </div>
   </main>
 </SiteLayout>
 
 <style>
-  main {
-    width: calc(100% - var(--space-page) - var(--space-page));
-    max-width: 70ch;
-    margin-inline: auto;
-    padding-block: clamp(3rem, 8vw, 6rem);
+  .content {
+    padding: var(--spacer-70) 0;
   }
 
   h1 {
+    margin-bottom: var(--spacer-20);
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 400;
     line-height: 1.1;
+  }
+
+  p + p {
+    margin-top: var(--spacer-20);
   }
 </style>

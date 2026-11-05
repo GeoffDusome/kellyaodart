@@ -7,11 +7,6 @@
   --color-accent: #85422e;
   --color-border: #d7cec0;
 
-  /* White text on these meets WCAG AA (4.5:1+). shade-orange-100–200 do not. */
-  --color-primary: var(--shade-orange-400);
-  --color-primary-hover: var(--shade-orange-500);
-  --color-on-primary: var(--color-white);
-
   --grid-margin: round(down, clamp(1rem, -0.3rem + 6.5vw, 7.5rem), 2px);
   --grid-gutter: round(down, clamp(1.5rem, 1.2rem + 1.5vw, 3rem), 2px);
   --grid-content-width: 840px;
