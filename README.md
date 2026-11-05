@@ -5,10 +5,13 @@ Content pages are static; shop pages and the product sitemap render on demand.
 
 ## Development
 
-Requires Node.js 22.23.4 or newer.
+Development and CI use Node.js 24.18.0 (`.nvmrc`) and npm 11.16.0 (`package.json`).
 
 ```sh
-npm install
+nvm install
+nvm use
+npm install --global "$(node -p 'require("./package.json").packageManager')"
+npm ci
 npm run dev
 ```
 
@@ -33,7 +36,9 @@ Zed formats on save using the project's Prettier configuration via
 `.astro` support.
 
 GitHub Actions runs both checks on pull requests and pushes to `main`, using
-Node.js 24 and `npm ci`. Neither check needs deployment credentials.
+`.nvmrc`, the npm version in `package.json`, and `npm ci`. Use `npm ci` locally
+to install the same locked dependencies. ESLint and formatting are separate
+checks: run both commands above before pushing. Neither needs deployment credentials.
 
 ## Vercel
 

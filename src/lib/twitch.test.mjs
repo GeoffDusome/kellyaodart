@@ -23,14 +23,20 @@ test("live checks share requests and cache tokens and status for a minute", asyn
   });
   const [first, concurrent] = await Promise.all([check(), check()]);
   assert.deepEqual(first, {
-    live: true, title: "Painting today", channel: "test_channel", videoId: null,
+    live: true,
+    title: "Painting today",
+    channel: "test_channel",
+    videoId: null,
   });
   assert.deepEqual(concurrent, first);
   assert.deepEqual(await check(), first);
   assert.equal(streams, 1);
   t.mock.timers.tick(60_001);
   assert.deepEqual(await check(), {
-    live: false, title: null, channel: "test_channel", videoId: null,
+    live: false,
+    title: null,
+    channel: "test_channel",
+    videoId: null,
   });
   assert.equal(streams, 2);
   assert.equal(tokens, 1);
@@ -92,7 +98,11 @@ test("VOD lookup failures and malformed responses fail explicitly without cachin
     [{ data: [] }, { data: [] }, /invalid users response/],
     [{ data: [{ id: "bad-id" }] }, { data: [] }, /invalid users response/],
     [{ data: [{ id: "123" }] }, { unexpected: [] }, /invalid videos response/],
-    [{ data: [{ id: "123" }] }, { data: [{ id: "bad-id", title: "VOD" }] }, /invalid videos response/],
+    [
+      { data: [{ id: "123" }] },
+      { data: [{ id: "bad-id", title: "VOD" }] },
+      /invalid videos response/,
+    ],
     [{ data: [{ id: "123" }] }, { data: [{ id: "456" }] }, /invalid videos response/],
     [{ data: [{ id: "123" }] }, new Response(null, { status: 503 }), /503/],
   ]) {

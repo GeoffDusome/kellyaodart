@@ -54,22 +54,21 @@ export function createTwitchLiveCheck(config: TwitchConfig, request = fetch) {
   }
 
   async function helix(path: string) {
-    const send = async () => request(
-      `https://api.twitch.tv/helix/${path}`,
-      {
+    const send = async () =>
+      request(`https://api.twitch.tv/helix/${path}`, {
         headers: {
           "Client-Id": config.clientId,
           Authorization: `Bearer ${await accessToken()}`,
         },
         signal: AbortSignal.timeout(10_000),
-      },
-    );
+      });
     let response = await send();
     if (response.status === 401) {
       token = undefined;
       response = await send();
     }
-    if (!response.ok) throw new Error(`Twitch ${path.split("?")[0]} check failed (${response.status}).`);
+    if (!response.ok)
+      throw new Error(`Twitch ${path.split("?")[0]} check failed (${response.status}).`);
     return response.json();
   }
 
