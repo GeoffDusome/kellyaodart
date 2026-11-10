@@ -74,11 +74,6 @@ const sharedAttributes = {
       display: inline-flex;
     }
 
-    &:not(.paper-link) {
-      border: 0;
-      background: transparent;
-    }
-
     &:focus-visible {
       outline: 2px solid currentcolor;
       outline-offset: 4px;
@@ -93,11 +88,22 @@ const sharedAttributes = {
 
   .default-link {
     min-height: 0;
+    background: linear-gradient(to bottom, currentcolor 0%, currentcolor 100%);
+    background-size: 0px 0.06em;
+    background-repeat: no-repeat;
+    background-position: left 100%;
+    transition: background-size 0.15s ease-out;
+
+    &:is(:hover, :focus-visible) {
+      background-size: 100% 0.06em;
+    }
   }
 
   .brush-link {
     position: relative;
     padding: 0.65rem 0.25rem;
+    border: 0;
+    background: transparent;
 
     &::after {
       content: "";
@@ -110,7 +116,7 @@ const sharedAttributes = {
       mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8 Q45 2 80 6 T157 4' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")
         center / 100% 100% no-repeat;
       clip-path: inset(0 100% 0 0);
-      transition: clip-path 350ms ease-out;
+      transition: clip-path 0.15s ease-out;
       pointer-events: none;
     }
 
@@ -140,7 +146,7 @@ const sharedAttributes = {
       z-index: -2;
       background: var(--color-accent);
       transform: translate(3px, 3px);
-      transition: transform 180ms ease;
+      transition: transform 0.15s ease;
     }
 
     &::after {

@@ -6,6 +6,7 @@
   --color-muted: #625a4f;
   --color-accent: #85422e;
   --color-border: #d7cec0;
+  --color-white: #ffffff;
 
   --grid-margin: round(down, clamp(1rem, -0.3rem + 6.5vw, 7.5rem), 2px);
   --grid-gutter: round(down, clamp(1.5rem, 1.2rem + 1.5vw, 3rem), 2px);

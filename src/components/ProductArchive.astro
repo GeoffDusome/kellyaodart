@@ -1,32 +1,123 @@
 ---
+import Hero from "./Hero.astro";
+import Button from "./Button.astro";
 import type { Product } from "../lib/products";
 
 interface Props {
+  collection: string;
   title: string;
   products: Product[];
 }
 
-const { title, products } = Astro.props;
+const { collection, title, products } = Astro.props;
 ---
 
-<main>
-  <h1>{title}</h1>
-  <ul>
+<Hero
+  eyebrow="Shop"
+  title={title}
+  description={
+    collection === "originals"
+      ? "Shop all of my one of a kind original acrylic paintings."
+      : "Shop all of my reproduction prints."
+  }
+/>
+<section class="products">
+  <ul class="products__list">
     {products.map((product) => (
-      <li>
-        <a href={`/products/${product.collection}/${product.slug}`}>
-          {product.images[0] && <img src={product.images[0].url} alt={product.images[0].alt} />}
-          {product.name}
-        </a>
-        {product.price && (
-          <p>
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: product.price.currency,
-            }).format(product.price.amount / 100)}
-          </p>
-        )}
+      <li class="products__list-item">
+        <div class="product-card">
+          {product.images[0] && (
+            <div class="product-card__media">
+              <img src={product.images[0].url} alt={product.images[0].alt} />
+            </div>
+          )}
+          <div class="product-card__content">
+            <h2 class="product-card__title">{product.name}</h2>
+            {product.price && (
+              <p class="product-card__cost">
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: product.price.currency,
+                }).format(product.price.amount / 100)}
+              </p>
+            )}
+            <div class="product-card__action">
+              <Button as="span" variant="brush">
+                View more details
+              </Button>
+            </div>
+          </div>
+          <a
+            href={`/products/${product.collection}/${product.slug}`}
+            class="product-card__link-overlay"
+            aria-label=`Read more about ${product.name}`
+          ></a>
+        </div>
       </li>
     ))}
   </ul>
-</main>
+</section>
+
+<style>
+  .products {
+    padding: var(--spacer-70) 0;
+  }
+
+  .products__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: var(--spacer-40);
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacer-20);
+    height: 100%;
+    position: relative;
+
+    &:is(:hover, :focus-within) {
+      .product-card__media img {
+        transform: scale(1.05);
+      }
+      .brush-link::after {
+        clip-path: inset(0);
+      }
+    }
+  }
+
+  .product-card__media {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.15s ease-out;
+    }
+  }
+
+  .product-card__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacer-10);
+  }
+
+  .product-card__title {
+    font-size: var(--font-size-20);
+  }
+
+  .product-card__link-overlay {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+</style>

@@ -12,5 +12,7 @@ const products = (await loadProducts()).filter(
 ---
 
 <SiteLayout title="Originals | Kelly AOD Art">
-  <ProductArchive title="Originals" products={products} />
+  <main id="main-content">
+    <ProductArchive collection="originals" title="Originals" products={products} />
+  </main>
 </SiteLayout>

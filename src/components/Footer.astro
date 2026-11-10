@@ -1,13 +1,17 @@
 ---
+import { Icon } from "astro-icon/components";
+
 import Button from "./Button.astro";
 
 const currentYear = new Date().getFullYear();
 const socialLinks = [
   {
+    icon: "facebook",
     href: "https://www.facebook.com/kellyaodart",
     label: "Facebook",
   },
   {
+    icon: "twitch",
     href: "https://www.twitch.tv/kellyaodart",
     label: "Twitch",
   },
@@ -72,8 +76,8 @@ const otherLinks = [
           <span class="site-footer__nav-column-label">Learn</span>
           <ul class="site-footer__nav-list">
             {otherLinks.map((link) => (
-              <li>
-                <Button as="a" href={link.href} variant="link">
+              <li class="site-footer__nav-list-item">
+                <Button as="a" href={link.href} variant="link" class="site-footer__nav-list-link">
                   {link.label}
                 </Button>
               </li>
@@ -89,9 +93,16 @@ const otherLinks = [
         <span class="site-footer__social-label">Follow me:</span>
         <ul class="site-footer__social-list">
           {socialLinks.map((link) => (
-            <li>
-              <Button as="a" href={link.href} variant="link" target="_blank">
-                {link.label}
+            <li class="site-footer__social-list-item">
+              <Button
+                as="a"
+                href={link.href}
+                variant="link"
+                target="_blank"
+                aria-label={link.label}
+                class="site-footer__social-list-link"
+              >
+                <Icon name={link.icon} class="site-footer__social-list-icon" />
               </Button>
             </li>
           ))}
@@ -110,7 +121,6 @@ const otherLinks = [
   .site-footer {
     padding: var(--spacer-60) var(--grid-margin);
     border-top: 1px solid var(--color-border);
-    color: var(--color-muted);
   }
 
   .site-footer__inner {
@@ -182,6 +192,33 @@ const otherLinks = [
     display: flex;
     align-items: center;
     gap: var(--spacer-20);
+  }
+
+  .site-footer__social-list-item {
+    line-height: 0;
+  }
+
+  .site-footer__social-list-link {
+    width: 32px;
+    height: 32px;
+    background: none !important;
+    border: 1px solid var(--color-ink) !important; /* override button styles */
+    border-radius: 100%;
+    transition:
+      background-color 0.15s ease-out,
+      color 0.15s ease-out;
+
+    &:hover {
+      background-color: var(--color-ink) !important;
+      color: var(--color-white);
+    }
+  }
+
+  .site-footer__social-list-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
   }
 
   .site-footer__copyright {
