@@ -1,6 +1,6 @@
 ---
-import SiteLayout from "../../../layouts/SiteLayout.astro";
-import { loadProducts } from "../../../lib/load-products";
+import SiteLayout from "@layouts/SiteLayout.astro";
+import { loadProducts } from "@lib/load-products";
 
 export const prerender = false;
 Astro.response.headers.set("Cache-Control", "no-store");
@@ -20,11 +20,11 @@ if (!product) Astro.response.status = 404;
   <main id="main-content">
     {product ? (
       <article>
-        <h1>{product.name}</h1>
-        <p>{product.description}</p>
+        <h1 transition:name={"product-title-" + product.id}>{product.name}</h1>
+        <p transition:name={"product-description-" + product.id}>{product.description}</p>
         <p>{product.collection}</p>
         {product.orientation && <p>{product.orientation}</p>}
-        <ul>
+        <ul transition:name={"product-image-" + product.id}>
           {product.images.map((image) => (
             <li>
               <img src={image.url} alt={image.alt} />

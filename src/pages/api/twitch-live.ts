@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getSecret } from "astro:env/server";
-import { createTwitchLiveCheck } from "../../lib/twitch";
+import { createTwitchLiveCheck } from "@lib/twitch";
 
 export const prerender = false;
 

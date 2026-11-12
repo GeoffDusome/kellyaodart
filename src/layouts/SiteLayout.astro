@@ -1,12 +1,14 @@
 ---
+import { ClientRouter } from "astro:transitions";
+
 import "../assets/css/reset.css";
 import "../assets/css/variables.css";
 import "../assets/css/typography.css";
 import "../assets/css/utilities.css";
 import "../assets/css/layout.css";
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header.astro";
-import SEO, { type SEOData } from "../components/SEO.astro";
+import Footer from "@components/Footer.astro";
+import Header from "@components/Header.astro";
+import SEO, { type SEOData } from "@components/SEO.astro";
 
 interface Props {
   title?: string;
@@ -41,6 +43,7 @@ const seoData: SEOData = {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <SEO seo={seoData} />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body class="site-body">
     <a class="skip-link" href="#main-content">

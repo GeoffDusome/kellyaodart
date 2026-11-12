@@ -1,4 +1,4 @@
-import { normalizeProducts, type Product, type SquareCatalog } from "./products.ts";
+import { normalizeProducts, type Product, type SquareCatalog } from "@lib/products.ts";
 
 type SquareConfig = { token: string; environment: string };
 

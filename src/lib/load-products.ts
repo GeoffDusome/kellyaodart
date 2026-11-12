@@ -1,5 +1,5 @@
 import { getSecret } from "astro:env/server";
-import { createProductLoader, fetchCatalog } from "./square";
+import { createProductLoader, fetchCatalog } from "@lib/square";
 
 export const loadProducts = createProductLoader(() =>
   fetchCatalog({

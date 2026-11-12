@@ -1,7 +1,7 @@
 ---
-import Hero from "./Hero.astro";
-import Button from "./Button.astro";
-import type { Product } from "../lib/products";
+import Hero from "@components/Hero.astro";
+import Button from "@components/Button.astro";
+import type { Product } from "@lib/products";
 
 interface Props {
   collection: string;
@@ -23,38 +23,58 @@ const { collection, title, products } = Astro.props;
 />
 <section class="products">
   <ul class="products__list">
-    {products.map((product) => (
-      <li class="products__list-item">
-        <div class="product-card">
-          {product.images[0] && (
-            <div class="product-card__media">
-              <img src={product.images[0].url} alt={product.images[0].alt} />
-            </div>
-          )}
-          <div class="product-card__content">
-            <h2 class="product-card__title">{product.name}</h2>
-            {product.price && (
-              <p class="product-card__cost">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: product.price.currency,
-                }).format(product.price.amount / 100)}
-              </p>
+    {products.map((product) => {
+      let price = product.price
+        ? new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: product.price.currency,
+          }).format(product.price.amount / 100)
+        : "";
+      let priceLabel = price;
+
+      if (product.variations.length > 1) {
+        priceLabel = `Avaiable in ${product.variations.length} sizes starting at ${price}`;
+      }
+      return (
+        <li class="products__list-item">
+          <div class="product-card">
+            {product.images[0] && (
+              <div class="product-card__media" transition:name={"product-image-" + product.id}>
+                <img src={product.images[0].url} alt={product.images[0].alt} />
+              </div>
             )}
-            <div class="product-card__action">
-              <Button as="span" variant="brush">
-                View more details
-              </Button>
+            <div class="product-card__content">
+              <h2 class="product-card__title" transition:name={"product-title-" + product.id}>
+                {product.name}
+              </h2>
+              {product.price && (
+                <p class="product-card__cost" transition:name={"product-price-" + product.id}>
+                  {priceLabel}
+                </p>
+              )}
+              {product.description && (
+                <p
+                  class="product-card__description"
+                  transition:name={"product-description-" + product.id}
+                >
+                  {product.description}
+                </p>
+              )}
+              <div class="product-card__action">
+                <Button as="span" variant="brush">
+                  View more details
+                </Button>
+              </div>
             </div>
+            <a
+              href={`/products/${product.collection}/${product.slug}`}
+              class="product-card__link-overlay"
+              aria-label=`Read more about ${product.name}`
+            ></a>
           </div>
-          <a
-            href={`/products/${product.collection}/${product.slug}`}
-            class="product-card__link-overlay"
-            aria-label=`Read more about ${product.name}`
-          ></a>
-        </div>
-      </li>
-    ))}
+        </li>
+      );
+    })}
   </ul>
 </section>
 
@@ -109,6 +129,22 @@ const { collection, title, products } = Astro.props;
 
   .product-card__title {
     font-size: var(--font-size-20);
+  }
+
+  .product-card__cost {
+    font-weight: var(--font-weight-bold);
+  }
+
+  .product-card__description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+
+  .product-card__action {
+    margin-top: auto;
   }
 
   .product-card__link-overlay {

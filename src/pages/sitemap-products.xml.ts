@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { loadProducts } from "../lib/load-products";
+import { loadProducts } from "@lib/load-products";
 
 export const prerender = false;
 
