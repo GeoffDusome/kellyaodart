@@ -8,7 +8,7 @@ import icon from "astro-icon";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://kellyaodart.com",
+  adapter: vercel(),
   integrations: [
     sitemap({
       customPages: [
@@ -19,5 +19,17 @@ export default defineConfig({
     }),
     icon(),
   ],
-  adapter: vercel(),
+  image: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+    ],
+  },
+  site: "https://kellyaodart.com",
 });

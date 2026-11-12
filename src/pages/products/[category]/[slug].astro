@@ -1,5 +1,15 @@
 ---
+import { Image } from "astro:assets";
+import {
+  Swiper,
+  SwiperButtonNext,
+  SwiperButtonPrev,
+  SwiperPagination,
+  SwiperSlide,
+  SwiperWrapper,
+} from "astro-swiper";
 import SiteLayout from "@layouts/SiteLayout.astro";
+import Button from "@components/Button.astro";
 import { loadProducts } from "@lib/load-products";
 
 export const prerender = false;
@@ -19,34 +29,129 @@ if (!product) Astro.response.status = 404;
 >
   <main id="main-content">
     {product ? (
-      <article>
-        <h1 transition:name={"product-title-" + product.id}>{product.name}</h1>
-        <p transition:name={"product-description-" + product.id}>{product.description}</p>
-        <p>{product.collection}</p>
-        {product.orientation && <p>{product.orientation}</p>}
-        <ul transition:name={"product-image-" + product.id}>
-          {product.images.map((image) => (
-            <li>
-              <img src={image.url} alt={image.alt} />
-            </li>
-          ))}
-        </ul>
-        <ul>
-          {product.variations.map((variation) => (
-            <li>
-              <span>{variation.size ?? "One size"}</span>
-              {variation.price && (
-                <span>
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: variation.price.currency,
-                  }).format(variation.price.amount / 100)}
-                </span>
-              )}
-              <span>{variation.quantity > 0 ? `${variation.quantity} in stock` : "Sold out"}</span>
-            </li>
-          ))}
-        </ul>
+      <article class="product-header">
+        <div class="product-header__inner grid-width">
+          <div class="product-header__media">
+            {product.images.length > 1 ? (
+              <>
+                <Swiper
+                  uniqueClass="product-header__carousel"
+                  linkToThumbUniqueClass="product-header__thumb-carousel"
+                  transition:name={"product-image-" + product.id}
+                  options={{
+                    navigation: {
+                      nextEl: ".swiper-button-next",
+                      prevEl: ".swiper-button-prev",
+                    },
+                    pagination: { el: ".swiper-pagination", clickable: true },
+                  }}
+                >
+                  <SwiperWrapper>
+                    {product.images.map((image) => (
+                      <SwiperSlide>
+                        <Image src={image.url} alt={image.alt} inferSize={true} />
+                      </SwiperSlide>
+                    ))}
+                  </SwiperWrapper>
+                  <SwiperButtonPrev role="button" tabindex={0} aria-label="Previous image" />
+                  <SwiperButtonNext role="button" tabindex={0} aria-label="Next image" />
+                  <SwiperPagination />
+                </Swiper>
+                <Swiper
+                  uniqueClass="product-header__thumb-carousel"
+                  options={{
+                    slidesPerView: 4,
+                    freeMode: true,
+                    watchSlidesProgress: true,
+                    spaceBetween: 20,
+                  }}
+                >
+                  <SwiperWrapper>
+                    {product.images.map((image) => (
+                      <SwiperSlide>
+                        <Image src={image.url} alt={image.alt} inferSize={true} />
+                      </SwiperSlide>
+                    ))}
+                  </SwiperWrapper>
+                </Swiper>
+              </>
+            ) : product.images[0] ? (
+              <Image
+                class="product-header__single-image"
+                transition:name={"product-image-" + product.id}
+                src={product.images[0].url}
+                alt={product.images[0].alt}
+                inferSize={true}
+              />
+            ) : null}
+          </div>
+          <div class="product-header__content">
+            <span class="product-header__eyebrow">{product.collection}</span>
+            <h1 transition:name={"product-title-" + product.id}>{product.name}</h1>
+            <p transition:name={"product-description-" + product.id}>{product.description}</p>
+            {product.orientation && <p>{product.orientation}</p>}
+            {product.variations.length > 1 ? (
+              <div class="product-header__info">
+                <div class="product-header__size">
+                  <label for="product-size-selector" class="product-header__size-selector-label">
+                    Size
+                  </label>
+                  <select id="product-size-selector" class="product-header__size-selector">
+                    {product.variations.map((variation) => (
+                      <option value={variation.size}>{variation.size}</option>
+                    ))}
+                  </select>
+                </div>
+                {product.price && (
+                  <p class="product-header__price">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: product.price.currency,
+                    }).format(product.price.amount / 100)}
+                  </p>
+                )}
+                <div class="product-header__actions">
+                  <Button as="button" variant="paper">
+                    Add to Cart
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div class="product-header__info">
+                {product.price && (
+                  <p class="product-header__price" transition:name={"product-price-" + product.id}>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: product.price.currency,
+                    }).format(product.price.amount / 100)}
+                  </p>
+                )}
+                {product.inStock && product.variations[0].inventory[0].quantity > 1 && (
+                  <div class="product-header__quantity">
+                    <label for="quantity-selector" class="product-header__quantity-label">
+                      Quantity
+                    </label>
+                    <div class="product-header__quantity-input-wrapper">
+                      <input
+                        type="number"
+                        id="quantity-selector"
+                        class="product-header__quantity-input"
+                        value="1"
+                        min="1"
+                        max={product.variations[0].inventory[0].quantity}
+                      />
+                    </div>
+                  </div>
+                )}
+                <div class="product-header__actions">
+                  <Button as="button" variant="paper">
+                    Add to Cart
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </article>
     ) : (
       <>
@@ -58,3 +163,63 @@ if (!product) Astro.response.status = 404;
     )}
   </main>
 </SiteLayout>
+
+<style>
+  .product-header {
+    padding: var(--spacer-70) 0;
+  }
+
+  .product-header__inner {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    gap: var(--spacer-60);
+  }
+
+  .product-header__media {
+    padding: var(--spacer-20);
+    background-color: var(--color-muted);
+
+    &:has(.product-header__single-image) {
+      aspect-ratio: 1;
+    }
+  }
+
+  .product-header__carousel {
+    width: 100%;
+  }
+
+  .product-header__carousel .swiper-slide,
+  .product-header__thumb-carousel .swiper-slide {
+    display: flex;
+    justify-content: center;
+    height: auto;
+    aspect-ratio: 1;
+
+    & img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .product-header__thumb-carousel .swiper-slide {
+    cursor: pointer;
+  }
+
+  .product-header__single-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .product-header__eyebrow {
+    margin-bottom: var(--spacer-20);
+    color: var(--color-muted);
+    font-size: var(--font-size-05);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+</style>

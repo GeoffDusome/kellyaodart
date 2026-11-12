@@ -4,7 +4,7 @@ import Button from "@components/Button.astro";
 const channel = import.meta.env.TWITCH_CHANNEL;
 ---
 
-<section class="twitch full-width" aria-label="Twitch stream" data-twitch-stream>
+<section class="twitch" aria-label="Twitch stream" data-twitch-stream>
   <div class="twitch__inner grid-width">
     <h2 class="twitch__title">Live from the studio</h2>
     <p class="twitch__status" role="status" data-status>
@@ -86,7 +86,7 @@ const channel = import.meta.env.TWITCH_CHANNEL;
 
 <style>
   .twitch {
-    padding: var(--spacer-70);
+    margin: var(--spacer-70) 0;
   }
 
   .twitch__title {

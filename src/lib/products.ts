@@ -121,7 +121,7 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
       const collectionName = categories
         .find((name) => /^(originals|reproductions)$/i.test(name))
         ?.toLowerCase();
-      const collection =
+      const collection: Product["collection"] =
         collectionName === "originals" ? "originals" : collectionName ? "reproductions" : null;
       const orientationValue = Object.values(object.custom_attribute_values ?? {}).find(
         (value) => value.name === "Orientation",

@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+
 import Hero from "@components/Hero.astro";
 import Button from "@components/Button.astro";
 import type { Product } from "@lib/products";
@@ -40,7 +42,7 @@ const { collection, title, products } = Astro.props;
           <div class="product-card">
             {product.images[0] && (
               <div class="product-card__media" transition:name={"product-image-" + product.id}>
-                <img src={product.images[0].url} alt={product.images[0].alt} />
+                <Image src={product.images[0].url} alt={product.images[0].alt} inferSize={true} />
               </div>
             )}
             <div class="product-card__content">
@@ -80,7 +82,7 @@ const { collection, title, products } = Astro.props;
 
 <style>
   .products {
-    padding: var(--spacer-70) 0;
+    margin: var(--spacer-70) 0;
   }
 
   .products__list {
