@@ -40,7 +40,7 @@ export async function fetchCatalog(
   let cursor: string | undefined;
   do {
     const page = await squareRequest("catalog/list", {
-      types: "ITEM,ITEM_VARIATION,CATEGORY,IMAGE,CUSTOM_ATTRIBUTE_DEFINITION",
+      types: "ITEM,ITEM_VARIATION,CATEGORY,IMAGE,CUSTOM_ATTRIBUTE_DEFINITION,SALE_PRICE",
       ...(cursor && { cursor }),
     });
     if (page.objects !== undefined && !Array.isArray(page.objects)) {

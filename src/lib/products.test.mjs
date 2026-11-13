@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { normalizeProducts } from "./products.ts";
+import { getArchiveState } from "./product-filters.ts";
 
 test("normalizes archive and product data from a Square snapshot", () => {
   const snapshot = {
@@ -137,4 +138,233 @@ test("reproductions archive includes only reproductions, case-insensitively", ()
   );
   assert.equal(products.find((product) => product.name === "Originals").collection, "originals");
   assert.equal(products.find((product) => product.name === "Other").collection, null);
+});
+
+test("New custom attribute flags only explicitly enabled products", () => {
+  const catalog = [true, false, undefined].map((value, index) => ({
+    id: `item-${index}`,
+    type: "ITEM",
+    item_data: { name: `Item ${index}` },
+    custom_attribute_values:
+      value === undefined
+        ? {}
+        : {
+            "Square:new-field-key": { name: "New", boolean_value: value },
+          },
+  }));
+  assert.deepEqual(
+    normalizeProducts({ catalog, inventory: [] }).map(({ isNew }) => isNew),
+    [true, false, false],
+  );
+  catalog[0].custom_attribute_values["Square:new-field-key"].boolean_value = "false";
+  assert.throws(() => normalizeProducts({ catalog, inventory: [] }), /Invalid Square New flag/);
+});
+
+test("resolves collections and filter categories through Square category ancestry", () => {
+  const catalog = [
+    { id: "originals", type: "CATEGORY", category_data: { name: "Originals" } },
+    { id: "prints", type: "CATEGORY", category_data: { name: "Reproductions" } },
+    { id: "other", type: "CATEGORY", category_data: { name: "Unrelated" } },
+    {
+      id: "animals",
+      type: "CATEGORY",
+      category_data: { name: "Animals", parent_category: { id: "originals" } },
+    },
+    {
+      id: "birds",
+      type: "CATEGORY",
+      category_data: { name: "Birds", parent_category: { id: "animals" } },
+    },
+    {
+      id: "landscapes",
+      type: "CATEGORY",
+      category_data: { name: "Landscapes", parent_category: { id: "prints" } },
+    },
+    {
+      id: "cycle",
+      type: "CATEGORY",
+      category_data: { name: "Cycle", parent_category: { id: "cycle" } },
+    },
+    ...[
+      ["nested", ["birds", "animals", "other"]],
+      ["print", ["landscapes"]],
+      ["root", ["originals"]],
+      ["broken", ["missing", "cycle"]],
+    ].map(([id, categories]) => ({
+      id,
+      type: "ITEM",
+      item_data: { name: id, categories: categories.map((id) => ({ id })) },
+    })),
+  ];
+  const products = normalizeProducts({ catalog, inventory: [] });
+  const nested = products.find(({ id }) => id === "nested");
+  assert.equal(nested.collection, "originals");
+  assert.deepEqual(nested.categories, ["Birds", "Animals", "Unrelated"]);
+  assert.deepEqual(nested.subcategories, ["Birds", "Animals"]);
+  const print = products.find(({ id }) => id === "print");
+  assert.equal(print.collection, "reproductions");
+  assert.deepEqual(print.subcategories, ["Landscapes"]);
+  assert.deepEqual(products.find(({ id }) => id === "root").subcategories, []);
+  assert.equal(products.find(({ id }) => id === "broken").collection, null);
+});
+
+function saleSnapshot() {
+  return {
+    catalog: [
+      {
+        id: "art",
+        type: "ITEM",
+        item_data: {
+          name: "Sale artwork",
+          variations: [
+            {
+              id: "small",
+              item_variation_data: {
+                name: "Small",
+                price_money: { amount: 10000, currency: "USD" },
+              },
+            },
+            {
+              id: "large",
+              item_variation_data: {
+                name: "Large",
+                price_money: { amount: 25000, currency: "USD" },
+              },
+            },
+            {
+              id: "sold",
+              item_variation_data: { name: "Sold", price_money: { amount: 5000, currency: "USD" } },
+            },
+          ],
+        },
+      },
+      {
+        id: "sale",
+        type: "SALE_PRICE",
+        present_at_all_locations: true,
+        sale_price_data: {
+          item_variation_id: "large",
+          sale_price_type: "SALE_PRICE_TYPE_FIXED_AMOUNT",
+          amount_money: { amount: 2000, currency: "USD" },
+        },
+      },
+      {
+        id: "sold-sale",
+        type: "SALE_PRICE",
+        sale_price_data: {
+          item_variation_id: "sold",
+          sale_price_type: "SALE_PRICE_TYPE_FIXED_AMOUNT",
+          amount_money: { amount: 0, currency: "USD" },
+        },
+      },
+    ],
+    inventory: ["small", "large"].map((id) => ({
+      catalog_object_id: id,
+      state: "IN_STOCK",
+      quantity: "1",
+    })),
+  };
+}
+
+test("sale prices belong to their variation and drive the in-stock starting price and archive range", () => {
+  const [product] = normalizeProducts(saleSnapshot());
+  assert.deepEqual(product.price, { amount: 2000, currency: "USD" });
+  assert.deepEqual(product.regularPrice, { amount: 25000, currency: "USD" });
+  assert.equal(product.variations[0].price.amount, 10000);
+  assert.equal(product.variations[0].regularPrice.amount, 10000);
+  assert.equal(product.variations[1].price.amount, 2000);
+  assert.equal(product.variations[1].regularPrice.amount, 25000);
+  assert.equal(product.variations[2].price.amount, 0);
+  assert.equal(product.variations[2].quantity, 0);
+
+  const fullPriceProduct = {
+    ...product,
+    id: "full-price",
+    price: { amount: 10000, currency: "USD" },
+    regularPrice: { amount: 10000, currency: "USD" },
+  };
+  const archive = getArchiveState(
+    [product, fullPriceProduct],
+    new URLSearchParams("maxPrice=2000"),
+  );
+  assert.equal(archive.minPrice, 2000);
+  assert.equal(archive.maxPrice, 10000);
+  assert.deepEqual(
+    archive.products.map(({ id }) => id),
+    ["art"],
+  );
+});
+
+test("deleted sales restore regular pricing and zero-dollar sales remain valid", () => {
+  const snapshot = saleSnapshot();
+  snapshot.catalog[1].is_deleted = true;
+  const [regular] = normalizeProducts(snapshot);
+  assert.deepEqual(regular.price, { amount: 10000, currency: "USD" });
+  assert.deepEqual(regular.regularPrice, regular.price);
+  snapshot.catalog[1].is_deleted = false;
+  snapshot.catalog[1].sale_price_data.amount_money.amount = 0;
+  const [free] = normalizeProducts(snapshot);
+  assert.deepEqual(free.price, { amount: 0, currency: "USD" });
+  assert.equal(free.regularPrice.amount, 25000);
+});
+
+test("invalid, ambiguous, and unsupported sale prices fail explicitly", () => {
+  const cases = [
+    [
+      "negative amount",
+      (sale) => {
+        sale.sale_price_data.amount_money.amount = -1;
+      },
+    ],
+    [
+      "fractional cents",
+      (sale) => {
+        sale.sale_price_data.amount_money.amount = 2000.5;
+      },
+    ],
+    [
+      "missing amount",
+      (sale) => {
+        delete sale.sale_price_data.amount_money;
+      },
+    ],
+    [
+      "unsupported type",
+      (sale) => {
+        sale.sale_price_data.sale_price_type = "PERCENTAGE";
+      },
+    ],
+    [
+      "currency mismatch",
+      (sale) => {
+        sale.sale_price_data.amount_money.currency = "CAD";
+      },
+    ],
+    [
+      "above regular price",
+      (sale) => {
+        sale.sale_price_data.amount_money.amount = 30000;
+      },
+    ],
+    [
+      "location-specific",
+      (sale) => {
+        sale.present_at_all_locations = false;
+      },
+    ],
+    [
+      "excluded location",
+      (sale) => {
+        sale.absent_at_location_ids = ["location"];
+      },
+    ],
+  ];
+  for (const [label, change] of cases) {
+    const snapshot = saleSnapshot();
+    change(snapshot.catalog[1]);
+    assert.throws(() => normalizeProducts(snapshot), /Square sale price/i, label);
+  }
+  const snapshot = saleSnapshot();
+  snapshot.catalog.push({ ...snapshot.catalog[1], id: "duplicate" });
+  assert.throws(() => normalizeProducts(snapshot), /Multiple Square sale prices/);
 });

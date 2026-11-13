@@ -1,161 +1,191 @@
 ---
-import { Image } from "astro:assets";
-
-import Hero from "@components/Hero.astro";
-import Button from "@components/Button.astro";
+import Pagination from "@components/Pagination.astro";
+import ProductCard from "@components/ProductCard.astro";
+import ProductFilters from "@components/ProductFilters.astro";
+import { getArchiveParams, getArchiveState } from "@lib/product-filters";
 import type { Product } from "@lib/products";
 
 interface Props {
-  collection: string;
-  title: string;
   products: Product[];
 }
 
-const { collection, title, products } = Astro.props;
+const { products } = Astro.props;
+const archive = getArchiveState(products, Astro.url.searchParams);
+const { filters, page, pages, total } = archive;
+const currency = products.find((product) => product.price)?.price?.currency ?? "USD";
+const pageUrl = (number: number) => {
+  const query = getArchiveParams(filters, number);
+  return `${Astro.url.pathname}${query.size ? `?${query}` : ""}`;
+};
+const visibleIds = new Set(archive.products.map((product) => product.id));
+// ponytail: cache cards as inert HTML; use server paging if catalog payloads become too large.
+const filterProducts = products.map(({ id, subcategories, orientation, price }) => ({
+  id,
+  subcategories,
+  orientation,
+  price,
+}));
 ---
 
-<Hero
-  eyebrow="Shop"
-  title={title}
-  description={
-    collection === "originals"
-      ? "Shop all of my one of a kind original acrylic paintings."
-      : "Shop all of my reproduction prints."
-  }
-/>
-<section class="products">
-  <ul class="products__list">
-    {products.map((product) => {
-      let price = product.price
-        ? new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: product.price.currency,
-          }).format(product.price.amount / 100)
-        : "";
-      let priceLabel = price;
-
-      if (product.variations.length > 1) {
-        priceLabel = `Avaiable in ${product.variations.length} sizes starting at ${price}`;
-      }
-      return (
-        <li class="products__list-item">
-          <div class="product-card">
-            {product.images[0] && (
-              <div class="product-card__media" transition:name={"product-image-" + product.id}>
-                <Image src={product.images[0].url} alt={product.images[0].alt} inferSize={true} />
-              </div>
-            )}
-            <div class="product-card__content">
-              <h2 class="product-card__title" transition:name={"product-title-" + product.id}>
-                {product.name}
-              </h2>
-              {product.price && (
-                <p class="product-card__cost" transition:name={"product-price-" + product.id}>
-                  {priceLabel}
-                </p>
-              )}
-              {product.description && (
-                <p
-                  class="product-card__description"
-                  transition:name={"product-description-" + product.id}
-                >
-                  {product.description}
-                </p>
-              )}
-              <div class="product-card__action">
-                <Button as="span" variant="brush">
-                  View more details
-                </Button>
-              </div>
-            </div>
-            <a
-              href={`/products/${product.collection}/${product.slug}`}
-              class="product-card__link-overlay"
-              aria-label=`Read more about ${product.name}`
-            ></a>
-          </div>
+<section class="products" data-product-archive data-products={JSON.stringify(filterProducts)}>
+  <aside class="products__filters" aria-label="Product filters" hidden={products.length === 0}>
+    <ProductFilters
+      archive={archive}
+      currency={currency}
+      hasPrices={products.some((product) => product.price)}
+    />
+  </aside>
+  <div class="products__results">
+    <p role="status" aria-live="polite" data-filter-feedback></p>
+    <p role="status" data-invalid-params hidden={!archive.invalidParams}>
+      Some filter or page values were invalid and have been reset.
+    </p>
+    <p
+      class="products__status"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      data-results-status
+    >
+      {total
+        ? `Showing ${(page - 1) * 20 + 1}-${Math.min(page * 20, total)} of ${total} products`
+        : products.length
+          ? "No products match your filters."
+          : "No products are currently available."}
+    </p>
+    <ul class="products__list" aria-label="Products">
+      {archive.products.map((product) => (
+        <li class="products__list-item" data-product-id={product.id}>
+          <ProductCard product={product} />
         </li>
-      );
-    })}
-  </ul>
+      ))}
+    </ul>
+    <template data-product-cache>
+      {products
+        .filter((product) => !visibleIds.has(product.id))
+        .map((product) => (
+          <li class="products__list-item" data-product-id={product.id}>
+            <ProductCard product={product} />
+          </li>
+        ))}
+    </template>
+    <Pagination page={page} pages={pages} pageUrl={pageUrl} />
+  </div>
 </section>
+
+<script>
+  import { getArchiveParams, getArchiveState, type ArchiveProduct } from "@lib/product-filters";
+
+  const initialized = new WeakSet<HTMLElement>();
+
+  document.addEventListener("astro:page-load", () => {
+    for (const archive of document.querySelectorAll<HTMLElement>("[data-product-archive]")) {
+      if (initialized.has(archive)) continue;
+      initialized.add(archive);
+      const products: ArchiveProduct[] = JSON.parse(archive.dataset.products!);
+      const form = archive.querySelector("form")!;
+      const list = archive.querySelector<HTMLUListElement>(".products__list")!;
+      const cache = archive.querySelector<HTMLTemplateElement>("[data-product-cache]")!;
+      const cards = new Map(
+        [
+          ...list.querySelectorAll<HTMLElement>("[data-product-id]"),
+          ...cache.content.querySelectorAll<HTMLElement>("[data-product-id]"),
+        ].map((card) => [card.dataset.productId!, card]),
+      );
+      const status = archive.querySelector<HTMLElement>("[data-results-status]")!;
+      const feedback = archive.querySelector<HTMLElement>("[data-filter-feedback]")!;
+      let acceptedState = getArchiveState(products, new URLSearchParams(window.location.search));
+
+      function update(params: URLSearchParams, writeUrl = true) {
+        const proposedState = getArchiveState(products, params);
+        const priceChanged =
+          proposedState.filters.minPrice !== acceptedState.filters.minPrice ||
+          proposedState.filters.maxPrice !== acceptedState.filters.maxPrice;
+        const blocked =
+          writeUrl && !priceChanged && acceptedState.total > 0 && proposedState.total === 0;
+        const state = blocked ? acceptedState : proposedState;
+        feedback.textContent = blocked
+          ? "That combination would show no products. Your previous filters have been kept."
+          : "";
+        acceptedState = state;
+        const visible = state.products.map((product) => cards.get(product.id)!);
+        const current = [...list.children];
+        if (
+          current.length !== visible.length ||
+          visible.some((card, index) => card !== current[index])
+        ) {
+          list.replaceChildren(...visible);
+        }
+        status.textContent = state.total
+          ? `Showing ${(state.page - 1) * 20 + 1}-${Math.min(state.page * 20, state.total)} of ${state.total} products`
+          : products.length
+            ? "No products match your filters."
+            : "No products are currently available.";
+        archive.querySelector<HTMLElement>("[data-invalid-params]")!.hidden = !state.invalidParams;
+        const query = getArchiveParams(state.filters, state.page).toString();
+        if (writeUrl && !blocked) {
+          const url = new URL(window.location.href);
+          url.search = query;
+          window.history.replaceState(window.history.state, "", url);
+        }
+        archive.dispatchEvent(
+          new CustomEvent("product-archive:update", {
+            detail: { ...state, query },
+          }),
+        );
+      }
+
+      form.addEventListener("submit", (event) => event.preventDefault());
+      form.addEventListener("input", () => {
+        update(
+          new URLSearchParams(
+            Array.from(new FormData(form), ([name, value]) => [name, String(value)]),
+          ),
+        );
+      });
+      archive.addEventListener("product-page-change", (event) => {
+        const { page } = (event as CustomEvent<{ page: number }>).detail;
+        const params = new URLSearchParams(window.location.search);
+        params.set("page", String(page));
+        update(params);
+        status.scrollIntoView({ block: "nearest" });
+      });
+      update(new URLSearchParams(window.location.search), false);
+    }
+  });
+</script>
 
 <style>
   .products {
     margin: var(--spacer-70) 0;
+    display: grid;
+    grid-template-columns: minmax(12rem, 1fr) minmax(0, 4fr);
+    gap: var(--spacer-40);
+  }
+
+  .products__status {
+    margin-bottom: var(--spacer-30);
+  }
+
+  .products:has(.products__filters[hidden]) {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .products__list {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--spacer-40);
   }
 
-  .product-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacer-20);
-    height: 100%;
-    position: relative;
-
-    &:is(:hover, :focus-within) {
-      .product-card__media img {
-        transform: scale(1.05);
-      }
-      .brush-link::after {
-        clip-path: inset(0);
-      }
+  @media (max-width: 64rem) {
+    .products__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  .product-card__media {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.15s ease-out;
+  @media (max-width: 40rem) {
+    .products {
+      grid-template-columns: minmax(0, 1fr);
     }
-  }
-
-  .product-card__content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacer-10);
-  }
-
-  .product-card__title {
-    font-size: var(--font-size-20);
-  }
-
-  .product-card__cost {
-    font-weight: var(--font-weight-bold);
-  }
-
-  .product-card__description {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    overflow: hidden;
-  }
-
-  .product-card__action {
-    margin-top: auto;
-  }
-
-  .product-card__link-overlay {
-    display: block;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 2;
   }
 </style>

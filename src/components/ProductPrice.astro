@@ -1,0 +1,46 @@
+---
+import type { Product } from "@lib/products";
+
+interface Props {
+  price: Product["price"];
+  regularPrice?: Product["regularPrice"];
+}
+
+const { price, regularPrice } = Astro.props;
+const onSale = price && regularPrice && regularPrice.amount > price.amount;
+const format = (money: NonNullable<Product["price"]>) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: money.currency,
+  }).format(money.amount / 100);
+---
+
+{price && (
+  <span class="product-price">
+    {onSale && regularPrice && (
+      <>
+        <span class="visually-hidden">Regular price: </span>
+        <s>{format(regularPrice)}</s>
+        <span class="visually-hidden">Sale price: </span>
+      </>
+    )}
+    <span class:list={{ "product-price__sale": onSale }}>{format(price)}</span>
+  </span>
+)}
+
+<style>
+  .product-price {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5em;
+
+    s {
+      color: var(--color-muted);
+      font-weight: var(--font-weight-regular);
+    }
+  }
+
+  .product-price__sale {
+    color: var(--color-accent);
+  }
+</style>

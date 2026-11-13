@@ -79,6 +79,19 @@ Unknown products and category mismatches return 404; sold items keep their pages
 The sitemap index links to `/sitemap-products.xml`, which uses the same live data.
 For a live catalog, set `SQUARE_ENVIRONMENT=production`.
 
+The catalog request includes Square's currently undocumented `SALE_PRICE` object type.
+Fixed-amount sales are matched to their variation: `price` is the effective selling
+price and `regularPrice` preserves its original price. Cards and product pages share
+`ProductPrice`, which strikes through the regular price when discounted. Archive
+price limits and filtering use the effective price of the cheapest in-stock variation;
+its original price always comes from that same variation. Selecting a size updates
+both prices on the product page. Deleted sales revert to regular pricing.
+Unsupported sale types, invalid amounts/currency, multiple active sales per variation,
+and location-specific sales fail explicitly rather than displaying a guessed price.
+Location-specific sales require choosing a storefront fulfillment location first.
+Sale prices use the same 60-second catalog cache. This is display/filter support;
+the Add to Cart markup is not yet a checkout integration.
+
 Catalog conventions agreed so far: originals and reproductions are separate Square
 products, each with its own landing page (`/products/originals` and
 `/products/reproductions`), so no
@@ -88,9 +101,45 @@ Originals and new reproductions have one size;
 `Regular` means there are no size choices. Older reproductions may have multiple size
 variations, named with their dimensions (for example `12x12` and `24x24`).
 Orientation comes from the Square `Orientation` custom attribute.
+The item-level boolean custom attribute `New` controls `Product.isNew` and a shared
+diagonal `NewBadge` ribbon over the top-left image corner on cards and product pages.
+Only an explicitly checked value shows the
+badge; unchecked or unset values do not. Changes appear after the catalog cache
+expires (up to 60 seconds); the flag does not expire automatically.
+
+Archives filter instantly in the browser and display 20 matching products per page. Category
+options come from assigned subcategories beneath the current collection, including
+nested ancestors; assigning a subcategory alone also places an item in its parent
+collection. Category and orientation selections use OR within each group and AND
+between groups. A two-thumb price slider uses the full collection's lowest and highest
+displayed prices (the cheapest in-stock variation), in cents. Products without a price
+remain visible until a price limit is narrowed. Checkboxes and price changes update results
+immediately and reset to page one; no Apply button or additional request is needed.
+Category and orientation options show live counts across the full collection, applying
+the other filter groups and price range but ignoring selections within their own group.
+Unavailable options are hidden; selected options remain visible and removable even at
+zero. Checkbox changes that would turn nonempty results into an empty set are rejected
+with an explanation, restoring the previous selections. Price changes may show an empty
+state; widen the range or deselect filters to recover. Outdated shared links
+can still show an empty state and use the same controls to recover.
+Filter and page changes replace the current URL without navigation, so shared links and
+reloads preserve selections without adding a history entry for every slider movement.
+Numbered pagination shows the current page, its neighbors,
+and the first and last pages, with ellipses across gaps. Previous/Next links appear only
+when another page exists in that direction. Only the current page's cards are in the live
+product list; remaining cards are stored in inert HTML templates, so their images are not
+loaded until displayed. The full catalog's card markup and lightweight filter data still
+ship with the page; reconsider server pagination if that payload becomes too large.
+Without JavaScript, the filter submit button and pagination use server-rendered results.
+`ProductFilters`, `PriceRange`, `ProductCard`, and `Pagination` own their respective UI;
+`ProductArchive` coordinates filtering and the displayed cards.
 
 Run the local check with
 `node --test src/lib/products.test.mjs src/lib/square.test.mjs`.
+Check archive filtering, pagination, and the price slider with
+`node --test src/lib/product-filters.test.mjs src/components/ProductArchive.test.mjs`.
+Set `CHROME_BIN` to a Chrome/Chromium executable when running that command to also
+exercise live filtering, empty-state recovery, and pagination in an isolated headless browser.
 
 ## Twitch
 

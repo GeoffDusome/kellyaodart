@@ -12,6 +12,14 @@ type CatalogObject = {
   id: string;
   type: string;
   is_deleted?: boolean;
+  present_at_all_locations?: boolean;
+  present_at_location_ids?: string[];
+  absent_at_location_ids?: string[];
+  sale_price_data?: {
+    item_variation_id?: string;
+    sale_price_type?: string;
+    amount_money?: Money;
+  };
   item_data?: {
     name?: string;
     description?: string;
@@ -22,7 +30,7 @@ type CatalogObject = {
     is_archived?: boolean;
   };
   image_data?: { url?: string };
-  category_data?: { name?: string };
+  category_data?: { name?: string; parent_category?: { id?: string } };
   custom_attribute_definition_data?: {
     name?: string;
     selection_config?: { allowed_selections?: { uid: string; name: string }[] };
@@ -33,6 +41,7 @@ type CatalogObject = {
       name?: string;
       custom_attribute_definition_id?: string;
       selection_uid_values?: string[];
+      boolean_value?: boolean;
     }
   >;
 };
@@ -53,17 +62,21 @@ export type Product = {
   description: string;
   collection: "originals" | "reproductions" | null;
   categories: string[];
+  subcategories: string[];
   orientation: string | null;
+  isNew: boolean;
   images: { id: string; url: string; alt: string }[];
   variations: {
     id: string;
     name: string;
     size: string | null;
     price: Money | null;
+    regularPrice: Money | null;
     quantity: number;
     inventory: { locationId: string | null; state: string; quantity: number }[];
   }[];
   price: Money | null;
+  regularPrice: Money | null;
   inStock: boolean;
 };
 
@@ -73,6 +86,36 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
   }
 
   const catalogById = new Map(snapshot.catalog.map((object) => [object.id, object]));
+  const salePrices = new Map<string, Money>();
+  for (const object of snapshot.catalog) {
+    if (object.type !== "SALE_PRICE" || object.is_deleted) continue;
+    const sale = object.sale_price_data;
+    // Square returns this object type, but does not document its schema.
+    if (
+      typeof sale?.item_variation_id !== "string" ||
+      !sale.item_variation_id ||
+      sale.sale_price_type !== "SALE_PRICE_TYPE_FIXED_AMOUNT" ||
+      !sale.amount_money ||
+      !Number.isSafeInteger(sale.amount_money.amount) ||
+      sale.amount_money.amount < 0 ||
+      !/^[A-Z]{3}$/.test(sale.amount_money.currency ?? "")
+    ) {
+      throw new Error(`Invalid or unsupported Square sale price ${object.id}.`);
+    }
+    if (
+      object.present_at_all_locations === false ||
+      object.present_at_location_ids?.length ||
+      object.absent_at_location_ids?.length
+    ) {
+      throw new Error(
+        `Location-specific Square sale price ${object.id} requires a storefront location.`,
+      );
+    }
+    if (salePrices.has(sale.item_variation_id)) {
+      throw new Error(`Multiple Square sale prices for variation ${sale.item_variation_id}.`);
+    }
+    salePrices.set(sale.item_variation_id, sale.amount_money);
+  }
   const orientations = new Map<string, Map<string, string>>();
   for (const object of snapshot.catalog) {
     const definition = object.custom_attribute_definition_data;
@@ -118,11 +161,31 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
       const categories = (item.categories ?? [])
         .map((category) => catalogById.get(category.id)?.category_data?.name)
         .filter((name): name is string => Boolean(name));
-      const collectionName = categories
+      const categoryPaths = (item.categories ?? []).map(({ id }) => {
+        const path: string[] = [];
+        const visited = new Set<string>();
+        let category = catalogById.get(id);
+        while (category?.category_data && !category.is_deleted && !visited.has(category.id)) {
+          visited.add(category.id);
+          if (category.category_data.name) path.push(category.category_data.name);
+          category = catalogById.get(category.category_data.parent_category?.id ?? "");
+        }
+        return path;
+      });
+      const collectionName = categoryPaths
+        .flat()
         .find((name) => /^(originals|reproductions)$/i.test(name))
         ?.toLowerCase();
       const collection: Product["collection"] =
         collectionName === "originals" ? "originals" : collectionName ? "reproductions" : null;
+      const subcategories = [
+        ...new Set(
+          categoryPaths.flatMap((path) => {
+            const root = path.findIndex((name) => name.toLowerCase() === collection);
+            return root === -1 ? [] : path.slice(0, root);
+          }),
+        ),
+      ];
       const orientationValue = Object.values(object.custom_attribute_values ?? {}).find(
         (value) => value.name === "Orientation",
       );
@@ -132,6 +195,12 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
         orientationId && orientationUid
           ? (orientations.get(orientationId)?.get(orientationUid) ?? null)
           : null;
+      const newValue = Object.values(object.custom_attribute_values ?? {}).find(
+        (value) => value.name === "New",
+      )?.boolean_value;
+      if (newValue !== undefined && typeof newValue !== "boolean") {
+        throw new Error(`Invalid Square New flag for item ${object.id}.`);
+      }
       const images = (item.image_ids ?? [])
         .map((id) => ({
           id,
@@ -151,23 +220,36 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
             .filter((count) => count.state === "IN_STOCK")
             .reduce((total, count) => total + count.quantity, 0);
           const name = variationData?.name ?? "Regular";
+          const regularPrice = variationData?.price_money ?? null;
+          const salePrice = salePrices.get(variation.id);
+          if (
+            salePrice &&
+            (!regularPrice ||
+              !Number.isSafeInteger(regularPrice.amount) ||
+              regularPrice.amount < 0 ||
+              salePrice.currency !== regularPrice.currency ||
+              salePrice.amount > regularPrice.amount)
+          ) {
+            throw new Error(
+              `Square sale price does not match the regular price for variation ${variation.id}.`,
+            );
+          }
           return {
             id: variation.id,
             name,
             size: /^regular$/i.test(name) ? null : name,
-            price: variationData?.price_money ?? null,
+            price: salePrice ?? regularPrice,
+            regularPrice,
             quantity,
             inventory,
           };
         });
       const inStockVariations = variations.filter((variation) => variation.quantity > 0);
-      const price =
-        inStockVariations
-          .filter((variation): variation is typeof variation & { price: Money } =>
-            Boolean(variation.price),
-          )
-          .map((variation) => variation.price)
-          .sort((a, b) => a.amount - b.amount)[0] ?? null;
+      const cheapestVariation = inStockVariations
+        .filter((variation): variation is typeof variation & { price: Money } =>
+          Boolean(variation.price),
+        )
+        .sort((a, b) => a.price.amount - b.price.amount)[0];
 
       return {
         id: object.id,
@@ -181,10 +263,13 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
         description,
         collection: collection ?? null,
         categories,
+        subcategories,
         orientation,
+        isNew: newValue === true,
         images,
         variations,
-        price,
+        price: cheapestVariation?.price ?? null,
+        regularPrice: cheapestVariation?.regularPrice ?? null,
         inStock: inStockVariations.length > 0,
       };
     })

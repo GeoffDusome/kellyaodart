@@ -10,6 +10,8 @@ import {
 } from "astro-swiper";
 import SiteLayout from "@layouts/SiteLayout.astro";
 import Button from "@components/Button.astro";
+import NewBadge from "@components/NewBadge.astro";
+import ProductPrice from "@components/ProductPrice.astro";
 import { loadProducts } from "@lib/load-products";
 
 export const prerender = false;
@@ -21,6 +23,9 @@ const product =
     ? (await loadProducts()).find((item) => item.collection === category && item.slug === slug)
     : undefined;
 if (!product) Astro.response.status = 404;
+const initialVariation =
+  product?.variations.find((variation) => variation.quantity > 0 && variation.price) ??
+  product?.variations[0];
 ---
 
 <SiteLayout
@@ -32,6 +37,7 @@ if (!product) Astro.response.status = 404;
       <article class="product-header">
         <div class="product-header__inner grid-width">
           <div class="product-header__media">
+            {product.isNew && <NewBadge />}
             {product.images.length > 1 ? (
               <>
                 <Swiper
@@ -98,16 +104,33 @@ if (!product) Astro.response.status = 404;
                   </label>
                   <select id="product-size-selector" class="product-header__size-selector">
                     {product.variations.map((variation) => (
-                      <option value={variation.size}>{variation.size}</option>
+                      <option
+                        value={variation.id}
+                        selected={variation.id === initialVariation?.id}
+                        disabled={variation.quantity <= 0}
+                      >
+                        {variation.size}
+                      </option>
                     ))}
                   </select>
                 </div>
                 {product.price && (
                   <p class="product-header__price">
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: product.price.currency,
-                    }).format(product.price.amount / 100)}
+                    {product.variations.map((variation) => (
+                      <span
+                        data-variation-price={variation.id}
+                        hidden={variation.id !== initialVariation?.id}
+                      >
+                        {variation.price ? (
+                          <ProductPrice
+                            price={variation.price}
+                            regularPrice={variation.regularPrice}
+                          />
+                        ) : (
+                          "Price unavailable"
+                        )}
+                      </span>
+                    ))}
                   </p>
                 )}
                 <div class="product-header__actions">
@@ -120,10 +143,7 @@ if (!product) Astro.response.status = 404;
               <div class="product-header__info">
                 {product.price && (
                   <p class="product-header__price" transition:name={"product-price-" + product.id}>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: product.price.currency,
-                    }).format(product.price.amount / 100)}
+                    <ProductPrice price={product.price} regularPrice={product.regularPrice} />
                   </p>
                 )}
                 {product.inStock && product.variations[0].inventory[0].quantity > 1 && (
@@ -164,6 +184,20 @@ if (!product) Astro.response.status = 404;
   </main>
 </SiteLayout>
 
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const selector = document.querySelector<HTMLSelectElement>("#product-size-selector");
+    if (!selector) return;
+    const updatePrice = () => {
+      for (const price of document.querySelectorAll<HTMLElement>("[data-variation-price]")) {
+        price.hidden = price.dataset.variationPrice !== selector.value;
+      }
+    };
+    selector.onchange = updatePrice;
+    updatePrice();
+  });
+</script>
+
 <style>
   .product-header {
     padding: var(--spacer-70) 0;
@@ -176,6 +210,7 @@ if (!product) Astro.response.status = 404;
   }
 
   .product-header__media {
+    position: relative;
     padding: var(--spacer-20);
     background-color: var(--color-muted);
 

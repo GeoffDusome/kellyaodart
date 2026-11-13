@@ -1,0 +1,159 @@
+---
+import Button from "@components/Button.astro";
+import { getPaginationPages } from "@lib/product-filters";
+
+interface Props {
+  page: number;
+  pages: number;
+  pageUrl: (page: number) => string;
+}
+
+const { page, pages, pageUrl } = Astro.props;
+---
+
+<nav class="pagination" aria-label="Product pages" hidden={pages <= 1}>
+  <ul class="pagination__list">
+    {page > 1 && (
+      <li>
+        <Button as="a" href={pageUrl(page - 1)} rel="prev" variant="link">
+          Previous
+        </Button>
+      </li>
+    )}
+    {getPaginationPages(page, pages).map((number) => (
+      <li>
+        {number === null ? (
+          <span aria-hidden="true">&hellip;</span>
+        ) : number === page ? (
+          <span class="pagination__page" aria-current="page" aria-label={`Page ${number}`}>
+            {number}
+          </span>
+        ) : (
+          <a class="pagination__page" href={pageUrl(number)} aria-label={`Page ${number}`}>
+            {number}
+          </a>
+        )}
+      </li>
+    ))}
+    {page < pages && (
+      <li>
+        <Button as="a" href={pageUrl(page + 1)} rel="next" variant="link">
+          Next
+        </Button>
+      </li>
+    )}
+  </ul>
+  <template data-pagination-link>
+    <li>
+      <a class="pagination__page"></a>
+    </li>
+  </template>
+  <template data-pagination-direction>
+    <li>
+      <Button as="a" variant="link" />
+    </li>
+  </template>
+</nav>
+
+<script>
+  import { getPaginationPages } from "@lib/product-filters";
+
+  const initialized = new WeakSet<HTMLElement>();
+
+  document.addEventListener("astro:page-load", () => {
+    for (const nav of document.querySelectorAll<HTMLElement>(".pagination")) {
+      if (initialized.has(nav)) continue;
+      initialized.add(nav);
+      const archive = nav.closest<HTMLElement>("[data-product-archive]");
+      if (!archive) continue;
+      const list = nav.querySelector("ul")!;
+      const linkTemplate = nav.querySelector<HTMLTemplateElement>("[data-pagination-link]")!;
+      const directionTemplate = nav.querySelector<HTMLTemplateElement>(
+        "[data-pagination-direction]",
+      )!;
+
+      archive.addEventListener("product-archive:update", (event) => {
+        const { page, pages, query } = (
+          event as CustomEvent<{
+            page: number;
+            pages: number;
+            query: string;
+          }>
+        ).detail;
+        const fragment = document.createDocumentFragment();
+        function addLink(number: number, label: string, direction?: "prev" | "next") {
+          const template = direction ? directionTemplate : linkTemplate;
+          const item = template.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+          const link = item.querySelector("a")!;
+          const params = new URLSearchParams(query);
+          params.delete("page");
+          if (number > 1) params.set("page", String(number));
+          link.href = `${window.location.pathname}${params.size ? `?${params}` : ""}`;
+          link.textContent = label;
+          if (direction) link.rel = direction;
+          else link.setAttribute("aria-label", `Page ${number}`);
+          if (number === page) link.setAttribute("aria-current", "page");
+          fragment.append(item);
+        }
+        if (page > 1) addLink(page - 1, "Previous", "prev");
+        for (const number of getPaginationPages(page, pages)) {
+          if (number === null) {
+            const item = document.createElement("li");
+            item.textContent = "\u2026";
+            item.setAttribute("aria-hidden", "true");
+            fragment.append(item);
+          } else {
+            addLink(number, String(number));
+          }
+        }
+        if (page < pages) addLink(page + 1, "Next", "next");
+        list.replaceChildren(fragment);
+        nav.hidden = pages <= 1;
+      });
+
+      nav.addEventListener("click", (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const link =
+          event.target instanceof Element
+            ? event.target.closest<HTMLAnchorElement>("a[href]")
+            : null;
+        if (!link) return;
+        event.preventDefault();
+        const page = Number(new URL(link.href).searchParams.get("page") ?? "1");
+        archive.dispatchEvent(new CustomEvent("product-page-change", { detail: { page } }));
+        nav.querySelector<HTMLAnchorElement>('[aria-current="page"]')?.focus();
+      });
+    }
+  });
+</script>
+
+<style>
+  .pagination__list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacer-20);
+    margin-top: var(--spacer-40);
+  }
+
+  .pagination__page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    border: 1px solid var(--color-border);
+    text-decoration: none;
+
+    &[aria-current="page"] {
+      background: var(--color-accent);
+      color: var(--color-white);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+  }
+</style>

@@ -1,4 +1,5 @@
 ---
+import Hero from "@components/Hero.astro";
 import ProductArchive from "@components/ProductArchive.astro";
 import SiteLayout from "@layouts/SiteLayout.astro";
 import { loadProducts } from "@lib/load-products";
@@ -13,6 +14,11 @@ const products = (await loadProducts()).filter(
 
 <SiteLayout title="Originals | Kelly AOD Art">
   <main id="main-content">
-    <ProductArchive collection="originals" title="Originals" products={products} />
+    <Hero
+      eyebrow="Shop"
+      title="Originals"
+      description="Shop all of my one of a kind original acrylic paintings."
+    />
+    <ProductArchive products={products} />
   </main>
 </SiteLayout>

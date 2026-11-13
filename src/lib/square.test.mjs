@@ -12,6 +12,7 @@ test("fetches paginated catalog and inventory from Square, batching variation ID
       assert.equal(url.hostname, "connect.squareupsandbox.com");
       assert.equal(options.headers.Authorization, "Bearer test-token");
       if (url.pathname.endsWith("catalog/list")) {
+        assert.ok(url.searchParams.get("types").split(",").includes("SALE_PRICE"));
         return Response.json(
           url.searchParams.has("cursor")
             ? { objects: ids.map((id) => ({ id, type: "ITEM_VARIATION" })) }

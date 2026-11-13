@@ -1,0 +1,175 @@
+---
+import Button from "@components/Button.astro";
+import PriceRange from "@components/PriceRange.astro";
+import type { getArchiveState } from "@lib/product-filters";
+
+interface Props {
+  archive: ReturnType<typeof getArchiveState>;
+  currency: string;
+  hasPrices: boolean;
+}
+
+const { archive, currency, hasPrices } = Astro.props;
+const { categories, orientations, categoryCounts, orientationCounts, minPrice, maxPrice, filters } =
+  archive;
+---
+
+<form class="product-filters" method="get" action={Astro.url.pathname}>
+  {categories.length > 0 && (
+    <fieldset class="product-filters__group">
+      <legend>Categories</legend>
+      {categories.map((category) => (
+        <label
+          data-filter-option
+          hidden={categoryCounts.get(category) === 0 && !filters.categories.includes(category)}
+        >
+          <input
+            type="checkbox"
+            name="category"
+            value={category}
+            checked={filters.categories.includes(category)}
+            class="visually-hidden"
+          />
+          {category} <span data-filter-count>({categoryCounts.get(category)})</span>
+        </label>
+      ))}
+    </fieldset>
+  )}
+  {hasPrices && (
+    <fieldset class="product-filters__group">
+      <legend>Price</legend>
+      <PriceRange
+        min={minPrice}
+        max={maxPrice}
+        valueMin={filters.minPrice ?? minPrice}
+        valueMax={filters.maxPrice ?? maxPrice}
+        currency={currency}
+      />
+    </fieldset>
+  )}
+  {orientations.length > 0 && (
+    <fieldset class="product-filters__group">
+      <legend>Orientation</legend>
+      {orientations.map((orientation) => (
+        <label
+          data-filter-option
+          hidden={
+            orientationCounts.get(orientation) === 0 && !filters.orientations.includes(orientation)
+          }
+        >
+          <input
+            type="checkbox"
+            name="orientation"
+            value={orientation}
+            checked={filters.orientations.includes(orientation)}
+            class="visually-hidden"
+          />
+          {orientation} <span data-filter-count>({orientationCounts.get(orientation)})</span>
+        </label>
+      ))}
+    </fieldset>
+  )}
+  <noscript>
+    <Button type="submit" variant="paper">
+      Filter products
+    </Button>
+  </noscript>
+</form>
+
+<script>
+  import type { getArchiveState } from "@lib/product-filters";
+
+  const initialized = new WeakSet<HTMLFormElement>();
+
+  document.addEventListener("astro:page-load", () => {
+    for (const form of document.querySelectorAll<HTMLFormElement>(".product-filters")) {
+      if (initialized.has(form)) continue;
+      initialized.add(form);
+      const archive = form.closest<HTMLElement>("[data-product-archive]")!;
+      archive.addEventListener("product-archive:update", (event) => {
+        const state = (event as CustomEvent<ReturnType<typeof getArchiveState>>).detail;
+        const focused = document.activeElement;
+        for (const [name, selected, counts] of [
+          ["category", state.filters.categories, state.categoryCounts],
+          ["orientation", state.filters.orientations, state.orientationCounts],
+        ] as const) {
+          for (const input of form.querySelectorAll<HTMLInputElement>(`[name="${name}"]`)) {
+            const label = input.closest<HTMLElement>("[data-filter-option]")!;
+            const count = counts.get(input.value) ?? 0;
+            input.checked = selected.includes(input.value);
+            label.hidden = count === 0 && !input.checked;
+            label.querySelector<HTMLElement>("[data-filter-count]")!.textContent = `(${count})`;
+          }
+        }
+        const min = form.querySelector<HTMLInputElement>('[name="minPrice"]');
+        const max = form.querySelector<HTMLInputElement>('[name="maxPrice"]');
+        if (min && max) {
+          min.value = String(state.filters.minPrice ?? state.minPrice);
+          max.value = String(state.filters.maxPrice ?? state.maxPrice);
+          form.querySelector("price-range")!.dispatchEvent(new Event("price-range:sync"));
+        }
+        if (
+          focused instanceof HTMLElement &&
+          focused.closest<HTMLElement>("[data-filter-option]")?.hidden
+        ) {
+          const next = [...form.querySelectorAll<HTMLInputElement>("input")].find(
+            (input) =>
+              !input.disabled && !input.closest<HTMLElement>("[data-filter-option]")?.hidden,
+          );
+          next?.focus();
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .product-filters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacer-20);
+  }
+
+  .product-filters__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacer-20);
+  }
+
+  .product-filters__group {
+    padding: var(--spacer-30) 0;
+    border-top: 1px solid var(--color-border);
+
+    legend {
+      float: left;
+      font-weight: var(--font-weight-bold);
+    }
+
+    legend + * {
+      clear: both;
+    }
+
+    label {
+      position: relative;
+      padding-left: calc(32px + var(--spacer-20));
+
+      &::before {
+        content: "";
+        display: block;
+        width: 32px;
+        height: 32px;
+        position: absolute;
+        top: calc(var(--font-size-base) * 1.5 / 2 - 16px);
+        left: 0;
+        border: 1px solid var(--color-accent);
+      }
+
+      &:has(input[type="checkbox"]:checked)::before {
+        background: var(--color-accent)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640' fill='%23FFFFFF'%3E%3Cpath d='M530.8 134.1C545.1 144.5 548.3 164.5 537.9 178.8L281.9 530.8C276.4 538.4 267.9 543.1 258.5 543.9C249.1 544.7 240 541.2 233.4 534.6L105.4 406.6C92.9 394.1 92.9 373.8 105.4 361.3C117.9 348.8 138.2 348.8 150.7 361.3L252.2 462.8L486.2 141.1C496.6 126.8 516.6 123.6 530.9 134z'/%3E%3C/svg%3E%0A")
+          center no-repeat;
+        background-size: 20px;
+      }
+    }
+  }
+</style>

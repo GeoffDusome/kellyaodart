@@ -1,0 +1,31 @@
+<span class="new-ribbon">
+  <span class="new-badge">New</span>
+</span>
+
+<style>
+  .new-ribbon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 6rem;
+    height: 6rem;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 1.25rem;
+    left: -2rem;
+    width: 9rem;
+    padding: 0.4em 0;
+    background: var(--color-accent);
+    color: var(--color-paper);
+    font-size: var(--font-size-05);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+    text-align: center;
+    transform: rotate(-45deg);
+  }
+</style>

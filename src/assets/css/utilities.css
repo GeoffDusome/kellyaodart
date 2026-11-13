@@ -13,6 +13,15 @@
   }
 }
 
+.visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .full-width {
   max-width: calc(100% + var(--grid-margin) * 2);
   margin-left: calc(var(--grid-margin) * -1);

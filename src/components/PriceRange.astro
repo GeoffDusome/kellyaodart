@@ -1,0 +1,183 @@
+---
+interface Props {
+  min: number;
+  max: number;
+  valueMin: number;
+  valueMax: number;
+  currency: string;
+}
+
+const { min, max, valueMin, valueMax, currency } = Astro.props;
+const money = new Intl.NumberFormat("en-US", { style: "currency", currency });
+const formatPrice = (amount: number) => money.format(amount / 100);
+const percent = (amount: number) => ((amount - min) / (max - min || 1)) * 100;
+---
+
+<price-range
+  data-currency={currency}
+  style={`--range-start: ${percent(valueMin)}%; --range-end: ${percent(valueMax)}%;`}
+>
+  <div class="price-range__values" aria-hidden="true">
+    <span data-min-label>{formatPrice(valueMin)}</span>
+    <span data-max-label>{formatPrice(valueMax)}</span>
+  </div>
+  <div class="price-range__slider">
+    <div class="price-range__track"></div>
+    <input
+      type="range"
+      name="minPrice"
+      min={min}
+      max={max}
+      step="1"
+      value={valueMin}
+      aria-label="Minimum price"
+      aria-valuetext={formatPrice(valueMin)}
+      aria-valuemax={valueMax}
+      disabled={min === max}
+      style={`z-index: ${valueMin === max ? 2 : 0}`}
+    />
+    <input
+      type="range"
+      name="maxPrice"
+      min={min}
+      max={max}
+      step="1"
+      value={valueMax}
+      aria-label="Maximum price"
+      aria-valuetext={formatPrice(valueMax)}
+      aria-valuemin={valueMin}
+      disabled={min === max}
+    />
+  </div>
+</price-range>
+
+<script>
+  class PriceRange extends HTMLElement {
+    private initialized = false;
+
+    connectedCallback() {
+      if (this.initialized) return;
+      this.initialized = true;
+      const min = this.querySelector<HTMLInputElement>('[name="minPrice"]')!;
+      const max = this.querySelector<HTMLInputElement>('[name="maxPrice"]')!;
+      const money = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: this.dataset.currency,
+      });
+
+      const sync = () => {
+        const lower = Number(min.min);
+        const span = Number(min.max) - lower || 1;
+        for (const [input, label, property] of [
+          [min, "[data-min-label]", "--range-start"],
+          [max, "[data-max-label]", "--range-end"],
+        ] as const) {
+          const value = Number(input.value);
+          const formatted = money.format(value / 100);
+          this.querySelector<HTMLElement>(label)!.textContent = formatted;
+          input.setAttribute("aria-valuetext", formatted);
+          this.style.setProperty(property, `${((value - lower) / span) * 100}%`);
+        }
+        min.setAttribute("aria-valuemax", max.value);
+        max.setAttribute("aria-valuemin", min.value);
+        min.style.zIndex = min.value === min.max ? "2" : "0";
+      };
+
+      this.addEventListener("price-range:sync", sync);
+      this.addEventListener("input", (event) => {
+        if (Number(min.value) > Number(max.value)) {
+          if (event.target === min) min.value = max.value;
+          else max.value = min.value;
+        }
+        sync();
+      });
+    }
+  }
+
+  customElements.define("price-range", PriceRange);
+</script>
+
+<style>
+  price-range {
+    display: block;
+  }
+
+  .price-range__values {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacer-10);
+  }
+
+  .price-range__slider {
+    position: relative;
+    height: 2.75rem;
+    margin-inline: 0.75rem;
+  }
+
+  .price-range__track {
+    position: absolute;
+    inset: calc(50% - 2px) 0 auto;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      var(--color-border) var(--range-start),
+      var(--color-accent) var(--range-start),
+      var(--color-accent) var(--range-end),
+      var(--color-border) var(--range-end)
+    );
+  }
+
+  input {
+    appearance: none;
+    position: absolute;
+    inset: 0 -0.75rem;
+    width: calc(100% + 1.5rem);
+    height: 100%;
+    margin: 0;
+    background: transparent;
+    pointer-events: none;
+
+    &[name="maxPrice"] {
+      z-index: 1;
+    }
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 2px solid var(--color-accent);
+      border-radius: 50%;
+      background: var(--color-paper);
+      pointer-events: auto;
+      cursor: grab;
+    }
+
+    &::-moz-range-thumb {
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid var(--color-accent);
+      border-radius: 50%;
+      background: var(--color-paper);
+      pointer-events: auto;
+      cursor: grab;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+
+    &:disabled::-webkit-slider-thumb {
+      cursor: default;
+    }
+
+    &:disabled::-moz-range-thumb {
+      cursor: default;
+    }
+  }
+</style>
