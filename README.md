@@ -106,6 +106,9 @@ diagonal `NewBadge` ribbon over the top-left image corner on cards and product p
 Only an explicitly checked value shows the
 badge; unchecked or unset values do not. Changes appear after the catalog cache
 expires (up to 60 seconds); the flag does not expire automatically.
+Products sort with `New`-flagged items first, then newest Square item creation date
+(`created_at`) within each group. Editing an item does not move it up. Equal dates
+use alphabetical order; items missing a creation date follow dated items in their group.
 
 Archives filter instantly in the browser and display 20 matching products per page. Category
 options come from assigned subcategories beneath the current collection, including

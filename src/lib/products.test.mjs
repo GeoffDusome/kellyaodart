@@ -160,6 +160,52 @@ test("New custom attribute flags only explicitly enabled products", () => {
   assert.throws(() => normalizeProducts({ catalog, inventory: [] }), /Invalid Square New flag/);
 });
 
+test("sorts New products first, then Square creation date newest first, with alphabetical ties", () => {
+  const entries = [
+    ["regular-newest", "A recent item", "2026-11-13T22:00:00Z", false],
+    ["new-old", "An old flagged item", "2025-01-01T00:00:00Z", true],
+    ["new-latest", "Z latest flagged item", "2026-11-13T15:00:00-05:00", true],
+    ["new-previous", "A previous flagged item", "2026-11-13T19:00:00Z", true],
+    ["new-undated", "An undated flagged item", undefined, true],
+    ["regular-tie-z", "Z tied item", "2026-01-01T00:00:00Z", false],
+    ["regular-tie-a", "A tied item", "2026-01-01T00:00:00Z", false],
+    ["regular-undated", "An undated item", undefined, false],
+  ];
+  const catalog = entries.map(([id, name, created_at, isNew]) => ({
+    id,
+    type: "ITEM",
+    created_at,
+    updated_at: "2027-01-01T00:00:00Z",
+    item_data: { name },
+    custom_attribute_values: { new: { name: "New", boolean_value: isNew } },
+  }));
+  const products = normalizeProducts({ catalog, inventory: [] });
+  const expected = [
+    "new-latest",
+    "new-previous",
+    "new-old",
+    "new-undated",
+    "regular-newest",
+    "regular-tie-a",
+    "regular-tie-z",
+    "regular-undated",
+  ];
+  assert.deepEqual(
+    products.map(({ id }) => id),
+    expected,
+  );
+  assert.equal(products[0].createdAt, "2026-11-13T15:00:00-05:00");
+  assert.deepEqual(
+    getArchiveState(products, new URLSearchParams()).products.map(({ id }) => id),
+    expected,
+  );
+  catalog[0].created_at = "not-a-date";
+  assert.throws(
+    () => normalizeProducts({ catalog, inventory: [] }),
+    /Invalid Square creation date/,
+  );
+});
+
 test("resolves collections and filter categories through Square category ancestry", () => {
   const catalog = [
     { id: "originals", type: "CATEGORY", category_data: { name: "Originals" } },

@@ -11,6 +11,7 @@ type VariationObject = {
 type CatalogObject = {
   id: string;
   type: string;
+  created_at?: string;
   is_deleted?: boolean;
   present_at_all_locations?: boolean;
   present_at_location_ids?: string[];
@@ -59,6 +60,7 @@ export type Product = {
   id: string;
   slug: string;
   name: string;
+  createdAt: string | null;
   description: string;
   collection: "originals" | "reproductions" | null;
   categories: string[];
@@ -157,6 +159,13 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
     )
     .map((object) => {
       const item = object.item_data!;
+      const createdAt = object.created_at ?? null;
+      if (
+        createdAt !== null &&
+        (typeof createdAt !== "string" || !Number.isFinite(Date.parse(createdAt)))
+      ) {
+        throw new Error(`Invalid Square creation date for item ${object.id}.`);
+      }
       const description = item.description_plaintext ?? item.description ?? "";
       const categories = (item.categories ?? [])
         .map((category) => catalogById.get(category.id)?.category_data?.name)
@@ -260,6 +269,7 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
             .replace(/^-|-$/g, "") || "item"
         }-${object.id.toLowerCase()}`,
         name: item.name!,
+        createdAt,
         description,
         collection: collection ?? null,
         categories,
@@ -273,5 +283,12 @@ export function normalizeProducts(snapshot: SquareCatalog): Product[] {
         inStock: inStockVariations.length > 0,
       };
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort(
+      (a, b) =>
+        Number(b.isNew) - Number(a.isNew) ||
+        (a.createdAt && b.createdAt
+          ? Date.parse(b.createdAt) - Date.parse(a.createdAt)
+          : Number(Boolean(b.createdAt)) - Number(Boolean(a.createdAt))) ||
+        a.name.localeCompare(b.name),
+    );
 }
